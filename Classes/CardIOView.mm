@@ -30,6 +30,7 @@
 #import "CardIOViewDelegate.h"
 #import "NSObject+CardioCategoryTest.h"
 #import "CardIODetectionMode.h"
+#import "CardIOOutput+Internal.h"
 
 NSString * const CardIOScanningOrientationDidChangeNotification = @"CardIOScanningOrientationDidChangeNotification";
 NSString * const CardIOCurrentScanningOrientation = @"CardIOCurrentScanningOrientation";
@@ -72,6 +73,20 @@ NSString * const CardIOScanningOrientationAnimationDuration = @"CardIOScanningOr
   return self;
 }
 
+-(instancetype)initWithFrame:(CGRect)frame outputs:(NSArray *)outputs {
+  if (self = [self initWithFrame:frame]) {
+    [self additionalInitWithOutputs:outputs];
+  }
+  return self;
+}
+
+-(instancetype)initWithCoder:(NSCoder *)aDecoder outputs:(NSArray *)outputs {
+  if (self = [self initWithCoder:aDecoder]) {
+    [self additionalInitWithOutputs:outputs];
+  }
+  return self;
+}
+
 - (void)commonInit {
   // test that categories are enabled
   @try {
@@ -82,6 +97,10 @@ NSString * const CardIOScanningOrientationAnimationDuration = @"CardIOScanningOr
 
   _config = [[CardIOConfig alloc] init];
   _config.scannedImageDuration = 1.0;
+}
+
+-(void)additionalInitWithOutputs:(NSArray*)outputs {
+  self.config.outputs = outputs;
 }
 
 - (CGSize)sizeThatFits:(CGSize)size {
@@ -142,9 +161,19 @@ NSString * const CardIOScanningOrientationAnimationDuration = @"CardIOScanningOr
 - (void)implicitStart {
   if (!self.scanHasBeenStarted && self.window && self.superview && !self.hidden) {
     if (![CardIOUtilities canReadCardWithCamera]) {
-      if (self.delegate) {
-        [self.delegate cardIOView:self didScanCard:nil];
+      if (!self.config.outputs.count) {
+        //only card-scanner
+        if (self.delegate) {
+          [self.delegate cardIOView:self didScanCard:nil];
+        } else {
+          for (CardIOOutput * output in self.config.outputs) {
+            if ([[output class] isSubclassOfClass:[CardIOOutputCardScanner class]]) {
+              ((CardIOOutputCardScanner*)output).onDetectedCard(self,nil);
+            }
+          }
+        }
       }
+      
       return;
     }
     

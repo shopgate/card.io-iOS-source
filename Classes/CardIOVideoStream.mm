@@ -13,6 +13,7 @@
 #import "CardIOConfig.h"
 #import "CardIOOrientation.h"
 #import "CardIOPaymentViewControllerContinuation.h"
+#import "CardIOOutput+Internal.h"
 
 #define kCaptureSessionDefaultPresetResolution AVCaptureSessionPreset640x480
 #define kVideoQueueName "io.card.ios.videostream"
@@ -436,19 +437,43 @@
   [self.captureSession addInput:self.cameraInput];
   self.captureSession.sessionPreset = kCaptureSessionDefaultPresetResolution;
   
-  _videoOutput = [[AVCaptureVideoDataOutput alloc] init];
-  if([CardIODevice shouldSetPixelFormat]) {
-    NSDictionary *videoOutputSettings = [NSDictionary dictionaryWithObject:[NSNumber numberWithUnsignedInteger:kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange]
-                                                                    forKey:(NSString *)kCVPixelBufferPixelFormatTypeKey];
-    [self.videoOutput setVideoSettings:videoOutputSettings];
+  //set card output
+  BOOL setCardConfig = NO;
+  if (!self.config.outputs.count){
+    setCardConfig = YES;
+  } else {
+    for (CardIOOutput * output in self.config.outputs) {
+      if ([[output class] isSubclassOfClass:[CardIOOutputCardScanner class]]) {
+        setCardConfig = YES;
+      }
+    }
   }
-  self.videoOutput.alwaysDiscardsLateVideoFrames = YES;
-  // NB: DO NOT USE minFrameDuration. minFrameDuration causes focusing to
-  // slow down dramatically, which causes significant ux pain.
-  dispatch_queue_t queue = dispatch_queue_create(kVideoQueueName, NULL);
-  [self.videoOutput setSampleBufferDelegate:self queue:queue];
   
-  [self.captureSession addOutput:self.videoOutput];
+  if (setCardConfig){
+    _videoOutput = [[AVCaptureVideoDataOutput alloc] init];
+    if([CardIODevice shouldSetPixelFormat]) {
+      NSDictionary *videoOutputSettings = [NSDictionary dictionaryWithObject:[NSNumber numberWithUnsignedInteger:kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange]
+                                                                      forKey:(NSString *)kCVPixelBufferPixelFormatTypeKey];
+      [self.videoOutput setVideoSettings:videoOutputSettings];
+    }
+    self.videoOutput.alwaysDiscardsLateVideoFrames = YES;
+    // NB: DO NOT USE minFrameDuration. minFrameDuration causes focusing to
+    // slow down dramatically, which causes significant ux pain.
+    dispatch_queue_t queue = dispatch_queue_create(kVideoQueueName, NULL);
+    [self.videoOutput setSampleBufferDelegate:self queue:queue];
+    
+    [self.captureSession addOutput:self.videoOutput];
+  }
+  
+  //set rest of additional outputs
+  if (self.config.outputs.count){
+    for (CardIOOutput * output in self.config.outputs) {
+      if (![[output class] isSubclassOfClass:[CardIOOutputCardScanner class]]) {
+        todo todo todo
+      }
+    }
+  }
+  
 #endif
   
   return YES;
