@@ -200,6 +200,12 @@ NSString * const CardIOScanningOrientationAnimationDuration = @"CardIOScanningOr
   }
 }
 
+#pragma mark - Property accessors (passthroughs to Config, but with direct action)
+
+-(void)setForceTorchToBeOn:(BOOL)forceTorchToBeOn{
+  self.config.forceTorchToBeOn = forceTorchToBeOn;
+}
+
 #pragma mark - Property accessors (passthroughs to CardIOCameraView)
 
 - (CGRect)cameraPreviewFrame {
@@ -368,6 +374,8 @@ CONFIG_PASSTHROUGH_READWRITE(BOOL, scanExpiry, ScanExpiry)
 CONFIG_PASSTHROUGH_READWRITE(UIView *, scanOverlayView, ScanOverlayView)
 
 CONFIG_PASSTHROUGH_READWRITE(CardIODetectionMode, detectionMode, DetectionMode)
+
+CONFIG_PASSTHROUGH_GETTER(BOOL, forceTorchToBeOn)
 
 @end
 

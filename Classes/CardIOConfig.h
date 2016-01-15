@@ -19,6 +19,7 @@
 @property(nonatomic, copy, readwrite)   NSString *scanInstructions;
 @property(nonatomic, assign, readwrite) BOOL hideCardIOLogo;
 @property(nonatomic, retain, readwrite) UIView *scanOverlayView;
+@property(nonatomic, assign, readwrite) BOOL forceTorchToBeOn;
 
 @property(nonatomic, assign, readwrite) CardIODetectionMode detectionMode;
 

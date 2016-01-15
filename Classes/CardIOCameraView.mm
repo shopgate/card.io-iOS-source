@@ -239,6 +239,16 @@
   }
 }
 
+-(void)torchIsForcedToBeOn:(BOOL)torchIsForcedToBeOn{
+  BOOL torchWasOn = [self.videoStream torchIsOn];
+  if (torchWasOn != torchIsForcedToBeOn) {
+    BOOL success = [self.videoStream setTorchOn:!torchWasOn];
+    if (success) {
+      [self updateLightButtonState];
+    }
+  }
+}
+
 - (void)updateLightButtonState {
   if (self.lightButton) {
     BOOL torchIsOn = [self.videoStream torchIsOn];

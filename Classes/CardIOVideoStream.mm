@@ -349,6 +349,9 @@
 }
 
 - (BOOL)setTorchOn:(BOOL)torchShouldBeOn {
+  if (!torchShouldBeOn && self.config.forceTorchToBeOn) {
+    return NO;
+  }
   return [self changeCameraConfiguration:^{
     AVCaptureTorchMode newTorchMode = torchShouldBeOn ? AVCaptureTorchModeOn : AVCaptureTorchModeOff;
     [self.camera setTorchMode:newTorchMode];

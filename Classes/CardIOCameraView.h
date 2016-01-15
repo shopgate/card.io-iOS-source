@@ -33,6 +33,8 @@
 // CGRect for the actual camera preview area within the cameraView
 - (CGRect)cameraPreviewFrame;
 
+- (void) torchIsForcedToBeOn:(BOOL)torchIsForcedToBeOn;
+
 @property(nonatomic, strong, readonly)  CardIOCardScanner *scanner;
 @property(nonatomic, weak, readwrite)   id<CardIOVideoStreamDelegate> delegate;
 @property(nonatomic, strong, readwrite) UIFont *instructionsFont;
