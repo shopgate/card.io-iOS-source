@@ -32,4 +32,9 @@
 /// @return Blurred screenshot.
 + (UIImageView *)blurredScreenImageView;
 
+
+#ifdef DEBUG
++ (void)setExternalLogging:(void(^)(NSString* message))loggingBlock;
+#endif
+
 @end

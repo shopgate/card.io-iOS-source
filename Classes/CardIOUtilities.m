@@ -129,4 +129,10 @@ static ScanAvailabilityStatus cachedScanAvailabilityStatus = ScanAvailabilityUnk
   return blurredScreenImageView;
 }
 
+#ifdef DEBUG
++ (void)setExternalLogging:(void(^)(NSString* message))loggingBlock{
+  [CardIOLogger setLoggingBlock:loggingBlock];
+}
+#endif
+
 @end
