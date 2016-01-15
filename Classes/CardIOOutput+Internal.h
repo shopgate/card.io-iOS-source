@@ -10,28 +10,35 @@
 
 #import "CardIOVideoStream.h"
 
-@interface CardIOOutputManualInit : NSException
+
+@protocol CARDIOOutputVideoStreaming <NSObject>
+@optional
+-(void)wasAddedByVideoStream:(CardIOVideoStream*)videoStream;
 @end
 
 
-
-@interface CardIOOutput ()
+@interface CardIOOutput ()<CARDIOOutputVideoStreaming> {
+  @protected
+    AVCaptureOutput * _captureOutput;
+}
 @property (nonatomic, weak) CardIOVideoStream * videoStream;
+@property (nonatomic, strong, readonly) AVCaptureOutput * captureOutput;
 @end
 
 
 
 @interface CardIOOutputCardScanner ()
-@property (nonatomic, copy) void(^onDetectedCard)(CardIOView *cardIOView, CardIOCreditCardInfo *detectedCardInfo;
+@property (nonatomic, copy) void(^onDetectedCard)(CardIOView *cardIOView, CardIOCreditCardInfo *detectedCardInfo);
 @property (nonatomic, copy) void(^onError)(NSError** error);
 -(instancetype)initCardScannerDoOnCardDetection:(void(^)(CardIOView *cardIOView, CardIOCreditCardInfo *detectedCardInfo))onDetectedCard doOnError:(void(^)(NSError** error))onError;
 @end
 
 
-@interface CardIOOutputBarcodeScanner ()
-@property (nonatomic, copy) void(^onDetectedBarcode)(AVCaptureOutput *captureOutput, NSArray *outputMetadataObjects, AVCaptureConnection *fromConnection);
+@interface CardIOOutputMetadataScanner ()<AVCaptureMetadataOutputObjectsDelegate>
+@property (nonatomic, strong) NSArray* metadataTypes;
+@property (nonatomic, copy) void(^onDetectedMetadata)(AVCaptureOutput *captureOutput, NSArray *outputMetadataObjects, AVCaptureConnection *fromConnection);
 @property (nonatomic, copy) void(^onError)(NSError** error);
--(instancetype)initDoOnBarcodeDetection:(void(^)(AVCaptureOutput *captureOutput, NSArray *outputMetadataObjects, AVCaptureConnection *fromConnection))onDetectedBarcode doOnError:(void(^)(NSError** error))onError;
+-(instancetype)initWithTypes:(NSArray*)metadataTypes doOnMetadataDetection:(void(^)(AVCaptureOutput *captureOutput, NSArray *outputMetadataObjects, AVCaptureConnection *fromConnection))onDetectedMetadata doOnError:(void(^)(NSError** error))onError;
 @end
 
 
@@ -41,5 +48,6 @@
 @interface CardIOOutputImageScanner ()
 @property (nonatomic, copy) void(^onScannedImage)(UIImage* scannedImage);
 @property (nonatomic, copy) void(^onError)(NSError** error);
--(instancetype)initDoOnScannedImmage:(void(^)(UIImage* scannedImage))onScannedImage doOnError:(void(^)(NSError** error))onError;
+@property (nonatomic, strong) NSDictionary* outputSettings;
+-(instancetype)initWithOutputSettings:(NSDictionary*)outputSettings doOnScannedImmage:(void(^)(UIImage* scannedImage))onScannedImage doOnError:(void(^)(NSError** error))onError;
 @end

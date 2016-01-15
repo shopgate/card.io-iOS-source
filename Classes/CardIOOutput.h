@@ -25,11 +25,11 @@
 @end
 
 
-@interface CardIOOutputBarcodeScanner : CardIOOutput
-+(instancetype)outputBarcodeScannerDoOnBarcodeDetection:(void(^)(AVCaptureOutput *captureOutput, NSArray *outputMetadataObjects, AVCaptureConnection *fromConnection))onDetectedBarcode doOnError:(void(^)(NSError** error))onError;
+@interface CardIOOutputMetadataScanner : CardIOOutput
++(instancetype)outputMetadataScannerWithTypes:(NSArray*)metadataTypes doOnMetadataDetection:(void(^)(AVCaptureOutput *captureOutput, NSArray *outputMetadataObjects, AVCaptureConnection *fromConnection))onDetectedMetadata doOnError:(void(^)(NSError** error))onError;
 @end
 
 @interface CardIOOutputImageScanner : CardIOOutput
-+(instancetype)outputImageScannerDoOnScannedImmage:(void(^)(UIImage* scannedImage))onScannedImage doOnError:(void(^)(NSError** error))onError;
++(instancetype)outputImageScannerWithOutputSettings:(NSDictionary*)outputSettings doOnScannedImmage:(void(^)(UIImage* scannedImage))onScannedImage doOnError:(void(^)(NSError** error))onError;
 -(void)scanImage;
 @end

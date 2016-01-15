@@ -446,6 +446,24 @@
       if ([[output class] isSubclassOfClass:[CardIOOutputCardScanner class]]) {
         setCardConfig = YES;
       }
+      
+      output.videoStream = self;
+    }
+  }
+  
+
+  
+  //set rest of additional outputs
+  if (self.config.outputs.count){
+    for (CardIOOutput * output in self.config.outputs) {
+      if (![[output class] isSubclassOfClass:[CardIOOutputCardScanner class]]) {
+        [self.captureSession addOutput:output.captureOutput];
+      }
+      
+      
+      if ([output respondsToSelector:@selector(wasAddedByVideoStream:)]) {
+        [output wasAddedByVideoStream:self];
+      }
     }
   }
   
@@ -463,15 +481,6 @@
     [self.videoOutput setSampleBufferDelegate:self queue:queue];
     
     [self.captureSession addOutput:self.videoOutput];
-  }
-  
-  //set rest of additional outputs
-  if (self.config.outputs.count){
-    for (CardIOOutput * output in self.config.outputs) {
-      if (![[output class] isSubclassOfClass:[CardIOOutputCardScanner class]]) {
-        todo todo todo
-      }
-    }
   }
   
 #endif
