@@ -30,6 +30,6 @@
 @end
 
 @interface CardIOOutputImageScanner : CardIOOutput
-+(instancetype)outputImageScannerWithOutputSettings:(NSDictionary*)outputSettings doOnScannedImmage:(void(^)(UIImage* scannedImage))onScannedImage doOnError:(void(^)(NSError** error))onError;
--(void)scanImage;
++(instancetype)outputImageScannerWithOutputSettings:(NSDictionary*)outputSettings doOnScannedImmage:(void(^)(UIImage* scannedImage))onScannedImage doOnError:(void(^)(NSError* error,NSString* requestId))onError;
+-(void)scanImageWithMaxWidth:(NSNumber*)maxWidth maxHeight:(NSNumber*)maxHeight requestID:(NSString *)requestID;
 @end

@@ -47,7 +47,7 @@
 
 @interface CardIOOutputImageScanner ()
 @property (nonatomic, copy) void(^onScannedImage)(UIImage* scannedImage);
-@property (nonatomic, copy) void(^onError)(NSError** error);
+@property (nonatomic, copy) void(^onError)(NSError* error,NSString* requestId);
 @property (nonatomic, strong) NSDictionary* outputSettings;
--(instancetype)initWithOutputSettings:(NSDictionary*)outputSettings doOnScannedImmage:(void(^)(UIImage* scannedImage))onScannedImage doOnError:(void(^)(NSError** error))onError;
+-(instancetype)initWithOutputSettings:(NSDictionary*)outputSettings doOnScannedImmage:(void(^)(UIImage* scannedImage))onScannedImage doOnError:(void(^)(NSError* error,NSString* requestId))onError;
 @end

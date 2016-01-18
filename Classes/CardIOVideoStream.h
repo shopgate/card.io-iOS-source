@@ -51,6 +51,7 @@
 #endif
 @property(nonatomic, strong, readwrite) CardIOCardScanner *scanner;
 
+@property(assign, readonly) UIInterfaceOrientation interfaceOrientation;
 @end
 
 #endif //USE_CAMERA || SIMULATE_CAMERA
