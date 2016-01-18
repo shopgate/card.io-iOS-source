@@ -6,6 +6,18 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
+typedef NS_ENUM(NSUInteger, CardIOLevel) {
+  CardIOLevelError,
+  CardIOLevelWarning,
+  CardIOLevelInfo,
+  CardIOLevelDebug,
+  CardIOLevelVerbose
+};
+
+typedef void (^ LoggingBlock)(NSUInteger,NSString*);
+
+
+
 @interface CardIOUtilities : NSObject
 
 /// Please send the output of this method with any technical support requests.
@@ -33,8 +45,8 @@
 + (UIImageView *)blurredScreenImageView;
 
 
-#ifdef DEBUG
-+ (void)setExternalLogging:(void(^)(NSString* message))loggingBlock;
-#endif
+
++ (void)setExternalLogging:(LoggingBlock)loggingBlock;
+
 
 @end

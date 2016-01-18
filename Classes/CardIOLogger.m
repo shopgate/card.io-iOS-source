@@ -7,11 +7,11 @@
 //
 
 #import "CardIOLogger.h"
-
+#import "CardIOUtilities.h"
 
 
 @interface CardIOLogger ()
-@property (nonatomic, copy) void (^log)(NSString* message);
+@property (nonatomic, copy) LoggingBlock log;
 +(CardIOLogger*)sharedInstance;
 @end
 
@@ -23,22 +23,33 @@
   static dispatch_once_t onceToken;
   dispatch_once(&onceToken, ^{
     __sharedInstance = [[CardIOLogger alloc] init];
-    __sharedInstance.log = ^void(NSString* message) {
+    __sharedInstance.log = ^void(NSUInteger loglevel ,NSString* message) {
       NSLog(@"%@",message);
     };
   });
   return __sharedInstance;
 }
 
-+(void)logMessage:(NSString*) format, ... NS_FORMAT_FUNCTION(1,2){
++(void)logMessage:(NSString*) format, ... {
   va_list args;
   va_start(args, format);
   NSString * message = [[NSString alloc]initWithFormat:format arguments:args];
   va_end(args);
   
-  return [CardIOLogger sharedInstance].log(message);
+  [CardIOLogger sharedInstance].log(CardIOLevelDebug,message);
 }
+
++(void)logWithLevel:(NSUInteger)logLevel message:(NSString *)format, ... {
+  va_list args;
+  va_start(args, format);
+  NSString * message = [[NSString alloc]initWithFormat:format arguments:args];
+  va_end(args);
+  
+  [CardIOLogger sharedInstance].log(logLevel, message);
+}
+
 +(void)setLoggingBlock:(LoggingBlock) loggingBlock{
   [CardIOLogger sharedInstance].log = loggingBlock;
 }
+
 @end

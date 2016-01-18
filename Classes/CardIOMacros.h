@@ -4,7 +4,7 @@
 //
 
 // CardIOLog is a replacement for NSLog that logs iff CARDIO_DEBUG is set.
-
+// CardIOLogWithLevel will always log
 
 #if CARDIO_DEBUG
 #import "CardIOLogger.h"
@@ -12,6 +12,7 @@
 #else
 #define CardIOLog(format, args...)
 #endif
+#define CardIOLogWithLevel(level,format, args...) [CardIOLogger logWithLevel:level message:format, ## args];
 
 @interface CardIOMacros : NSObject
 
