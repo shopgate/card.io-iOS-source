@@ -438,7 +438,7 @@
   }
   
   [self.captureSession addInput:self.cameraInput];
-  self.captureSession.sessionPreset = kCaptureSessionDefaultPresetResolution;
+  self.captureSession.sessionPreset = self.config.forcedSessionPreset ? self.config.forcedSessionPreset : kCaptureSessionDefaultPresetResolution;
   
   //set card output
   BOOL setCardConfig = NO;

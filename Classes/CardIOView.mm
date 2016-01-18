@@ -75,17 +75,26 @@ NSString * const CardIOScanningOrientationAnimationDuration = @"CardIOScanningOr
 
 -(instancetype)initWithFrame:(CGRect)frame outputs:(NSArray *)outputs {
   if (self = [self initWithFrame:frame]) {
-    [self additionalInitWithOutputs:outputs];
+    [self additionalInitWithOutputs:outputs captureSessionPreset:nil]; //nil = default of cardIO will be used
   }
   return self;
 }
 
 -(instancetype)initWithCoder:(NSCoder *)aDecoder outputs:(NSArray *)outputs {
   if (self = [self initWithCoder:aDecoder]) {
-    [self additionalInitWithOutputs:outputs];
+    [self additionalInitWithOutputs:outputs captureSessionPreset:nil];//nil = default of cardIO will be used
   }
   return self;
 }
+
+-(instancetype)initWithFrame:(CGRect)frame outputs:(NSArray *)outputs captureSessionPreset:(NSString *)sessionPreset {
+  if (self = [self initWithFrame:frame]) {
+    [self additionalInitWithOutputs:outputs captureSessionPreset:sessionPreset];
+  }
+  return self;
+}
+
+
 
 - (void)commonInit {
   // test that categories are enabled
@@ -99,8 +108,9 @@ NSString * const CardIOScanningOrientationAnimationDuration = @"CardIOScanningOr
   _config.scannedImageDuration = 1.0;
 }
 
--(void)additionalInitWithOutputs:(NSArray*)outputs {
+-(void)additionalInitWithOutputs:(NSArray*)outputs captureSessionPreset:(NSString *)sessionPreset {
   self.config.outputs = outputs;
+  self.config.forcedSessionPreset = sessionPreset;
 }
 
 - (CGSize)sizeThatFits:(CGSize)size {

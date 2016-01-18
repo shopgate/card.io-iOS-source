@@ -14,6 +14,7 @@
 /// These initializers are currently determined to be used only by using the CardIOView without the CardIOPaymentViewController
 -(instancetype)initWithCoder:(NSCoder *)aDecoder outputs:(NSArray*)outputs;
 -(instancetype)initWithFrame:(CGRect)frame outputs:(NSArray*)outputs;
+-(instancetype)initWithFrame:(CGRect)frame outputs:(NSArray*)outputs captureSessionPreset:(NSString*)sessionPreset;
 
 
 #pragma mark - Properties you MUST set

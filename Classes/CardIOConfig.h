@@ -21,6 +21,7 @@
 @property(nonatomic, retain, readwrite) UIView *scanOverlayView;
 @property(nonatomic, assign, readwrite) BOOL forceTorchToBeOn;
 @property(nonatomic, assign, readwrite) BOOL hiddenCardGuide;
+@property(nonatomic, strong, readwrite) NSString * forcedSessionPreset;
 
 @property(nonatomic, assign, readwrite) CardIODetectionMode detectionMode;
 
