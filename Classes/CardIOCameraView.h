@@ -35,6 +35,8 @@
 
 - (void) torchIsForcedToBeOn:(BOOL)torchIsForcedToBeOn;
 
+-(void)adaptGuideLayerAnimated:(BOOL)animated;
+
 @property(nonatomic, strong, readonly)  CardIOCardScanner *scanner;
 @property(nonatomic, weak, readwrite)   id<CardIOVideoStreamDelegate> delegate;
 @property(nonatomic, strong, readwrite) UIFont *instructionsFont;

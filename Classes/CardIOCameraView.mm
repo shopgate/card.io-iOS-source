@@ -122,6 +122,8 @@
     self.guideLayerLabel.numberOfLines = 0;
     [self addSubview:self.guideLayerLabel];
 
+    [self adaptGuideLayerAnimated:NO];
+    
     // Shutter view for shutter-open animation
     _shutter = [[CardIOShutterView alloc] initWithFrame:CGRectZero];
     [self.shutter setOpen:NO animated:NO duration:0];
@@ -495,12 +497,20 @@
 - (void)videoStream:(CardIOVideoStream *)stream didProcessFrame:(CardIOVideoFrame *)processedFrame {
   [self.shutter setOpen:YES animated:YES duration:0.5f];
 
-  // Hide instructions once we start to find edges
-  if (processedFrame.numEdgesFound < 0.05f) {
-    [UIView animateWithDuration:kLabelVisibilityAnimationDuration animations:^{self.guideLayerLabel.alpha = 1.0f;}];
-  } else if (processedFrame.numEdgesFound > 2.1f) {
-    [UIView animateWithDuration:kLabelVisibilityAnimationDuration animations:^{self.guideLayerLabel.alpha = 0.0f;}];
+  if (self.config.hiddenCardGuide) {
+    if (self.guideLayerLabel.alpha > 0.f ){
+      [UIView animateWithDuration:kLabelVisibilityAnimationDuration animations:^{self.guideLayerLabel.alpha = 0.0f;}];
+    }
+    
+  } else {
+    // Hide instructions once we start to find edges
+    if (processedFrame.numEdgesFound < 0.05f) {
+      [UIView animateWithDuration:kLabelVisibilityAnimationDuration animations:^{self.guideLayerLabel.alpha = 1.0f;}];
+    } else if (processedFrame.numEdgesFound > 2.1f) {
+      [UIView animateWithDuration:kLabelVisibilityAnimationDuration animations:^{self.guideLayerLabel.alpha = 0.0f;}];
+    }
   }
+  
 
   // Pass the video frame to the cardGuide so that it can update the edges
   self.cardGuide.videoFrame = processedFrame;
@@ -572,6 +582,22 @@
 
 - (void)setInstructionsFont:(UIFont *)instructionsFont {
   self.guideLayerLabel.font = instructionsFont;
+}
+
+
+-(void)adaptGuideLayerAnimated:(BOOL)animated{
+  CGFloat newAlpha = self.config.hiddenCardGuide ? 0.f : 1.f;
+  if (animated) {
+    [UIView animateWithDuration:animated ? 0.3f : 0.f delay:0 options:UIViewAnimationOptionCurveEaseInOut | UIViewAnimationOptionBeginFromCurrentState animations:^{
+      self.guideLayerLabel.alpha = newAlpha;
+      self.cardGuide.opacity = newAlpha;
+    } completion:^(BOOL finished) {
+    }];
+  } else {
+    self.guideLayerLabel.alpha = newAlpha;
+    self.cardGuide.opacity = newAlpha;
+  }
+
 }
 
 @end

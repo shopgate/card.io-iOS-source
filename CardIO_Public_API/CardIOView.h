@@ -100,6 +100,9 @@
 
 @property(nonatomic, assign, readwrite) BOOL forceTorchToBeOn;
 
+@property (nonatomic, assign, readwrite) BOOL hiddenCardGuide;
+-(void)setHiddenCardGuide:(BOOL)hiddenCardGuide animated:(BOOL)animated;
+
 /// Name for orientation change notification.
 extern NSString * const CardIOScanningOrientationDidChangeNotification;
 
