@@ -37,7 +37,8 @@
 - (void)startSession;
 - (void)stopSession;
 
--(void)forceSessionInteruption:(BOOL)forceSessionInteruption;
+-(void)forceSessionInterruption:(BOOL)forceSessionInterruption;
+-(void)autoInterruptOnCompletion:(void(^)(void))onCompletion;
 
 #if SIMULATE_CAMERA
 - (void)considerItScanned;
@@ -54,6 +55,7 @@
 @property(nonatomic, strong, readwrite) CardIOCardScanner *scanner;
 
 @property(assign, readonly) UIInterfaceOrientation interfaceOrientation;
+
 @end
 
 #endif //USE_CAMERA || SIMULATE_CAMERA

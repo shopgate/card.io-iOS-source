@@ -22,7 +22,9 @@
 @property(nonatomic, assign, readwrite) BOOL forceTorchToBeOn;
 @property(nonatomic, assign, readwrite) BOOL hiddenCardGuide;
 @property(nonatomic, strong, readwrite) NSString * forcedSessionPreset;
-@property(nonatomic, assign, readwrite) BOOL forceSessionInteruption;
+@property(nonatomic, assign, readwrite) BOOL forceSessionInterruption;
+@property(nonatomic, assign, readwrite) BOOL autoSessionStop;
+@property(nonatomic, assign, readonly)  BOOL isAutoInterupted;
 
 @property(nonatomic, assign, readwrite) CardIODetectionMode detectionMode;
 

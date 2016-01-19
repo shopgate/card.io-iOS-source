@@ -3,7 +3,9 @@
 //  See the file "LICENSE.md" for the full license governing this code.
 //
 
-#import "CardIOConfig.h"
+#import "CardIOConfig+Internal.h"
+
+
 
 @implementation CardIOConfig
 

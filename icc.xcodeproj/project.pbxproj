@@ -275,6 +275,7 @@
 		C9072DCD1C49463D0054988E /* CardIOOutput.m in Sources */ = {isa = PBXBuildFile; fileRef = C93765571C43D043006B4279 /* CardIOOutput.m */; };
 		C9072DCE1C49464E0054988E /* CardIOLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = C9072DC71C493A400054988E /* CardIOLogger.h */; };
 		C9072DCF1C4946570054988E /* CardIOLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = C9072DC81C493A400054988E /* CardIOLogger.m */; };
+		C9072DD21C4E4EF80054988E /* CardIOConfig+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = C9072DD01C4E4EF80054988E /* CardIOConfig+Internal.h */; };
 		C937655C1C43D4F9006B4279 /* CardIOOutput.m in Sources */ = {isa = PBXBuildFile; fileRef = C93765571C43D043006B4279 /* CardIOOutput.m */; };
 		C937655D1C43D57C006B4279 /* CardIOOutput.h in Headers */ = {isa = PBXBuildFile; fileRef = C93765561C43D043006B4279 /* CardIOOutput.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		C937655E1C43D57C006B4279 /* CardIOOutput+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = C93765591C43D0A5006B4279 /* CardIOOutput+Internal.h */; };
@@ -841,6 +842,7 @@
 		B5EDB90F168E05370055E716 /* CardIOAnimation.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CardIOAnimation.mm; path = Classes/CardIOAnimation.mm; sourceTree = "<group>"; };
 		C9072DC71C493A400054988E /* CardIOLogger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CardIOLogger.h; path = Classes/CardIOLogger.h; sourceTree = "<group>"; };
 		C9072DC81C493A400054988E /* CardIOLogger.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CardIOLogger.m; path = Classes/CardIOLogger.m; sourceTree = "<group>"; };
+		C9072DD01C4E4EF80054988E /* CardIOConfig+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CardIOConfig+Internal.h"; sourceTree = "<group>"; };
 		C93765561C43D043006B4279 /* CardIOOutput.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CardIOOutput.h; path = Classes/CardIOOutput.h; sourceTree = "<group>"; };
 		C93765571C43D043006B4279 /* CardIOOutput.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CardIOOutput.m; sourceTree = "<group>"; };
 		C93765591C43D0A5006B4279 /* CardIOOutput+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CardIOOutput+Internal.h"; sourceTree = "<group>"; };
@@ -1229,6 +1231,7 @@
 				031F1279132EBFC700738505 /* CardIOVideoStreamDelegate.h */,
 				C93765591C43D0A5006B4279 /* CardIOOutput+Internal.h */,
 				C93765571C43D043006B4279 /* CardIOOutput.m */,
+				C9072DD01C4E4EF80054988E /* CardIOConfig+Internal.h */,
 			);
 			name = Models;
 			sourceTree = "<group>";
@@ -2055,6 +2058,7 @@
 				92263DD11B83AD78003FE678 /* CardIOViewDelegate.h in Headers */,
 				C9072DC91C493A400054988E /* CardIOLogger.h in Headers */,
 				C937655E1C43D57C006B4279 /* CardIOOutput+Internal.h in Headers */,
+				C9072DD21C4E4EF80054988E /* CardIOConfig+Internal.h in Headers */,
 				4358E6FA1BFBBCCC007E07C3 /* CardIOCardholderNameTextFieldDelegate.h in Headers */,
 				A50A54D41BE30AB300B669FB /* UIImage+ImageEffects.h in Headers */,
 				92263DD01B83AD73003FE678 /* CardIOView.h in Headers */,

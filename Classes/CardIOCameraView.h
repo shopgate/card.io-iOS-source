@@ -37,7 +37,8 @@
 
 -(void)adaptGuideLayerAnimated:(BOOL)animated;
 
--(void)forceSessionInteruption:(BOOL)forceSessionInteruption;
+-(void)forceSessionInterruption:(BOOL)forceSessionInterruption;
+-(void)autoInterruptOnCompletion:(void(^)(void))onCompletion;
 
 @property(nonatomic, strong, readonly)  CardIOCardScanner *scanner;
 @property(nonatomic, weak, readwrite)   id<CardIOVideoStreamDelegate> delegate;

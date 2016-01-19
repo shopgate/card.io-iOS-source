@@ -106,6 +106,7 @@ NSString * const CardIOScanningOrientationAnimationDuration = @"CardIOScanningOr
 
   _config = [[CardIOConfig alloc] init];
   _config.scannedImageDuration = 1.0;
+  _config.autoSessionStop = YES;
 }
 
 -(void)additionalInitWithOutputs:(NSArray*)outputs captureSessionPreset:(NSString *)sessionPreset {
@@ -221,9 +222,9 @@ NSString * const CardIOScanningOrientationAnimationDuration = @"CardIOScanningOr
   [self.cameraView adaptGuideLayerAnimated:animated];
 }
 
--(void)setForceSessionInteruption:(BOOL)forceSessionInteruption {
-  self.config.forceSessionInteruption = YES;
-  [self.cameraView forceSessionInteruption:forceSessionInteruption];
+-(void)setForceSessionInterruption:(BOOL)forceSessionInterruption {
+  self.config.forceSessionInterruption = forceSessionInterruption;
+  [self.cameraView forceSessionInterruption:forceSessionInterruption];
 }
 
 #pragma mark - Property accessors (passthroughs to CardIOCameraView)
@@ -266,9 +267,17 @@ NSString * const CardIOScanningOrientationAnimationDuration = @"CardIOScanningOr
 }
 
 - (void)didDetectCard:(CardIOVideoFrame *)processedFrame {
+  if (self.config.isAutoInterupted) {
+    return;
+  }
+  
   if(processedFrame.foundAllEdges && processedFrame.focusOk) {
     if(self.detectionMode == CardIODetectionModeCardImageOnly) {
-      [self stopSession];
+      if (self.config.autoSessionStop){
+        [self stopSession];
+      } else {
+        [self.cameraView autoInterruptOnCompletion:[self continueAfterDetectedCard]];
+      }
       [self vibrate];
       
       CardIOCreditCardInfo *cardInfo = [[CardIOCreditCardInfo alloc] init];
@@ -283,7 +292,15 @@ NSString * const CardIOScanningOrientationAnimationDuration = @"CardIOScanningOr
 }
 
 - (void)didScanCard:(CardIOVideoFrame *)processedFrame {
-  [self stopSession];
+  if (self.config.isAutoInterupted) {
+    return;
+  }
+  
+  if (self.config.autoSessionStop) {
+    [self stopSession];
+  } else {
+    [self.cameraView autoInterruptOnCompletion:[self continueAfterDetectedCard]];
+  }
   [self vibrate];
 
   self.readCardInfo = processedFrame.scanner.cardInfo;
@@ -302,11 +319,23 @@ NSString * const CardIOScanningOrientationAnimationDuration = @"CardIOScanningOr
 }
 
 -(void)sendCardInfoViaOutput:(CardIOCreditCardInfo*)cardInfo {
-  for (CardIOOutput * output in self.config.outputs) {
+  for (CardIOOutput *output in self.config.outputs) {
     if ([[output class] isSubclassOfClass:[CardIOOutputCardScanner class]]) {
       ((CardIOOutputCardScanner*)output).onDetectedCard(self,cardInfo);
     }
   }
+}
+
+-(void(^)(void)) continueAfterDetectedCard {
+  __block CardIOView *block_self = self;
+  void(^continueBlock)() = ^() {
+      block_self.readCardInfo = nil;
+      block_self.cardImage = nil;
+      [self.transitionView removeFromSuperview];
+      self.transitionView = nil;
+  };
+  
+  return continueBlock;
 }
 
 - (void)successfulScan:(CardIOCreditCardInfo *)cardInfo {
@@ -404,12 +433,13 @@ CONFIG_PASSTHROUGH_READWRITE(BOOL, allowFreelyRotatingCardGuide, AllowFreelyRota
 CONFIG_PASSTHROUGH_READWRITE(NSString *, scanInstructions, ScanInstructions)
 CONFIG_PASSTHROUGH_READWRITE(BOOL, scanExpiry, ScanExpiry)
 CONFIG_PASSTHROUGH_READWRITE(UIView *, scanOverlayView, ScanOverlayView)
+CONFIG_PASSTHROUGH_READWRITE(BOOL, autoSessionStop, AutoSessionStop)
 
 CONFIG_PASSTHROUGH_READWRITE(CardIODetectionMode, detectionMode, DetectionMode)
 
 CONFIG_PASSTHROUGH_GETTER(BOOL, forceTorchToBeOn)
 CONFIG_PASSTHROUGH_GETTER(BOOL, hiddenCardGuide)
-CONFIG_PASSTHROUGH_GETTER(BOOL, forceSessionInteruption)
+CONFIG_PASSTHROUGH_GETTER(BOOL, forceSessionInterruption)
 
 
 @end

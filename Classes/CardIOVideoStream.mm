@@ -10,7 +10,7 @@
 #import "CardIOVideoFrame.h"
 #import "CardIOMacros.h"
 #import "CardIOCardScanner.h"
-#import "CardIOConfig.h"
+#import "CardIOConfig+Internal.h"
 #import "CardIOOrientation.h"
 #import "CardIOPaymentViewControllerContinuation.h"
 #import "CardIOOutput+Internal.h"
@@ -156,6 +156,9 @@
 @property (nonatomic, assign, readwrite) BOOL           currentlyAdjustingExposure;
 @property (nonatomic, assign, readwrite) NSTimeInterval lastChangeSignal;
 @property (nonatomic, assign, readwrite) BOOL           lastChangeTorchStateToOFF;
+
+@property(nonatomic, assign, readwrite) BOOL isAutoInterrupted;
+@property(nonatomic, strong, readwrite) NSMutableArray * completionBlocksAfterAutoInterruption;
 
 // This semaphore is intended to prevent a crash which was recorded with this exception message:
 // "AVCaptureSession can't stopRunning between calls to beginConfiguration / commitConfiguration"
@@ -505,7 +508,7 @@
     [self.camera addObserver:self forKeyPath:@"adjustingFocus" options:(NSKeyValueObservingOptionNew | NSKeyValueObservingOptionInitial) context:nil];
     [self.camera addObserver:self forKeyPath:@"adjustingExposure" options:(NSKeyValueObservingOptionNew | NSKeyValueObservingOptionInitial) context:nil];
     
-    if (!self.config.forceSessionInteruption){
+    if (!self.config.forceSessionInterruption && !self.isAutoInterrupted){
       [self.captureSession startRunning];
     }
 
@@ -569,10 +572,10 @@
   }
 }
 
--(void)forceSessionInteruption:(BOOL)forceSessionInteruption {
-  if (forceSessionInteruption && self.captureSession.isRunning) {
+-(void)forceSessionInterruption:(BOOL)forceSessionInterruption {
+  if (forceSessionInterruption && self.captureSession.isRunning) {
     [self.captureSession stopRunning];
-  } else if (self.captureSession && !self.captureSession.isRunning && !forceSessionInteruption && self.running /* was once started */) {
+  } else if (self.captureSession && !self.captureSession.isRunning && !forceSessionInterruption && self.running /* was once started */ && !self.isAutoInterrupted) {
     [self.captureSession startRunning];
   }
 }
@@ -580,11 +583,56 @@
 - (void)sendFrameToDelegate:(CardIOVideoFrame *)frame {
   // Due to threading, we can receive frames after we've stopped running.
   // Clean this up for our delegate.
-  if(self.running) {
+  if(self.running && !self.isAutoInterrupted) {
     [self.delegate videoStream:self didProcessFrame:frame];
   }
   else {
     CardIOLog(@"STRAY FRAME!!! wasted processing. we are sad.");
+  }
+}
+
+-(void)autoInterruptOnCompletion:(void(^)(void))onCompletion {
+  BOOL wasAutoInterrupted = self.isAutoInterrupted;
+  
+  if (!self.isAutoInterrupted) {
+    self.isAutoInterrupted = YES;
+  }
+  
+  if (onCompletion){
+    [self.completionBlocksAfterAutoInterruption addObject:[onCompletion copy]];
+  }
+  
+  if (!wasAutoInterrupted) {
+    __block CardIOVideoStream *block_self = self;
+    
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)((self.config.scannedImageDuration + 1) * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+      if (block_self.running && block_self.isAutoInterrupted) {
+        self.scanner = [[CardIOCardScanner alloc] init];
+        for (void (^completionBlock)(void) in self.completionBlocksAfterAutoInterruption) {
+          completionBlock();
+        }
+        block_self.isAutoInterrupted = NO;
+      }
+    });
+  }
+}
+
+
+-(void)setIsAutoInterrupted:(BOOL)isAutoInterrupted {
+  if (isAutoInterrupted != _isAutoInterrupted) {
+    if (_isAutoInterrupted) {
+      self.completionBlocksAfterAutoInterruption = nil;
+      if (self.running && !self.config.forceSessionInterruption) {
+        [self.delegate videoStream:self didProcessFrame:nil];
+        [self.captureSession startRunning];
+      }
+      
+    } else {
+      self.completionBlocksAfterAutoInterruption = [NSMutableArray arrayWithCapacity:2];
+      [self.captureSession stopRunning];
+    }
+    _isAutoInterrupted = isAutoInterrupted;
+    [self.config setIsAutoInterupted:isAutoInterrupted];
   }
 }
 

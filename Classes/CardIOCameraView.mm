@@ -525,8 +525,10 @@
     }
   }
 #endif
+  if (processedFrame) {
+    [self.delegate videoStream:stream didProcessFrame:processedFrame];
+  }
   
-  [self.delegate videoStream:stream didProcessFrame:processedFrame];
 }
 
 // Overlay orientation has the same constraints as the view controller,
@@ -600,8 +602,12 @@
 
 }
 
--(void)forceSessionInteruption:(BOOL)forceSessionInteruption {
-  [self.videoStream forceSessionInteruption:forceSessionInteruption];
+-(void)forceSessionInterruption:(BOOL)forceSessionInterruption {
+  [self.videoStream forceSessionInterruption:forceSessionInterruption];
+}
+
+-(void)autoInterruptOnCompletion:(void(^)(void))onCompletion{
+  [self.videoStream autoInterruptOnCompletion:onCompletion];
 }
 
 @end
