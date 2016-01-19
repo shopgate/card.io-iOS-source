@@ -176,11 +176,7 @@ NSString * const CardIOScanningOrientationAnimationDuration = @"CardIOScanningOr
         if (self.delegate) {
           [self.delegate cardIOView:self didScanCard:nil];
         } else {
-          for (CardIOOutput * output in self.config.outputs) {
-            if ([[output class] isSubclassOfClass:[CardIOOutputCardScanner class]]) {
-              ((CardIOOutputCardScanner*)output).onDetectedCard(self,nil);
-            }
-          }
+          [self sendCardInfoViaOutput:nil];
         }
       }
       
@@ -305,6 +301,14 @@ NSString * const CardIOScanningOrientationAnimationDuration = @"CardIOScanningOr
   [self successfulScan:cardInfo];
 }
 
+-(void)sendCardInfoViaOutput:(CardIOCreditCardInfo*)cardInfo {
+  for (CardIOOutput * output in self.config.outputs) {
+    if ([[output class] isSubclassOfClass:[CardIOOutputCardScanner class]]) {
+      ((CardIOOutputCardScanner*)output).onDetectedCard(self,cardInfo);
+    }
+  }
+}
+
 - (void)successfulScan:(CardIOCreditCardInfo *)cardInfo {
   // Even if not showing a transitionView (because self.scannedImageDuration == 0), we still create it.
   // This is because the CardIODataEntryView gets its cardImage from the transitionView. (A bit of a kludge, yes.)
@@ -334,6 +338,8 @@ NSString * const CardIOScanningOrientationAnimationDuration = @"CardIOScanningOr
       dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(self.scannedImageDuration * NSEC_PER_SEC)), dispatch_get_main_queue(), ^(void){
         if (self.delegate) {
           [self.delegate cardIOView:self didScanCard:cardInfo];
+        } else {
+          [self sendCardInfoViaOutput:cardInfo];
         }
         [self.transitionView removeFromSuperview];
       });
@@ -343,6 +349,8 @@ NSString * const CardIOScanningOrientationAnimationDuration = @"CardIOScanningOr
     if (self.delegate) {
       self.transitionView.hidden = YES;
       [self.delegate cardIOView:self didScanCard:cardInfo];
+    } else if (self.config.outputs.count) {
+      [self sendCardInfoViaOutput:cardInfo];
     }
   }
 }
