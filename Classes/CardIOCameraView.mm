@@ -600,6 +600,10 @@
 
 }
 
+-(void)forceSessionInteruption:(BOOL)forceSessionInteruption {
+  [self.videoStream forceSessionInteruption:forceSessionInteruption];
+}
+
 @end
 
 #endif

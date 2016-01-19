@@ -504,7 +504,10 @@
   if ([self addInputAndOutput]) {
     [self.camera addObserver:self forKeyPath:@"adjustingFocus" options:(NSKeyValueObservingOptionNew | NSKeyValueObservingOptionInitial) context:nil];
     [self.camera addObserver:self forKeyPath:@"adjustingExposure" options:(NSKeyValueObservingOptionNew | NSKeyValueObservingOptionInitial) context:nil];
-    [self.captureSession startRunning];
+    
+    if (!self.config.forceSessionInteruption){
+      [self.captureSession startRunning];
+    }
 
     [self changeCameraConfiguration:^{
       if ([self.camera respondsToSelector:@selector(isAutoFocusRangeRestrictionSupported)]) {
@@ -563,6 +566,14 @@
     self.running = NO;
     
     dispatch_semaphore_signal(self.cameraConfigurationSemaphore);
+  }
+}
+
+-(void)forceSessionInteruption:(BOOL)forceSessionInteruption {
+  if (forceSessionInteruption && self.captureSession.isRunning) {
+    [self.captureSession stopRunning];
+  } else if (self.captureSession && !self.captureSession.isRunning && !forceSessionInteruption && self.running /* was once started */) {
+    [self.captureSession startRunning];
   }
 }
 

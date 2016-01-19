@@ -104,6 +104,8 @@
 @property (nonatomic, assign, readwrite) BOOL hiddenCardGuide;
 -(void)setHiddenCardGuide:(BOOL)hiddenCardGuide animated:(BOOL)animated;
 
+@property (nonatomic, assign, readwrite) BOOL forceSessionInteruption;
+
 /// Name for orientation change notification.
 extern NSString * const CardIOScanningOrientationDidChangeNotification;
 

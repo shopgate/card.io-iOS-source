@@ -37,6 +37,8 @@
 
 -(void)adaptGuideLayerAnimated:(BOOL)animated;
 
+-(void)forceSessionInteruption:(BOOL)forceSessionInteruption;
+
 @property(nonatomic, strong, readonly)  CardIOCardScanner *scanner;
 @property(nonatomic, weak, readwrite)   id<CardIOVideoStreamDelegate> delegate;
 @property(nonatomic, strong, readwrite) UIFont *instructionsFont;

@@ -37,6 +37,8 @@
 - (void)startSession;
 - (void)stopSession;
 
+-(void)forceSessionInteruption:(BOOL)forceSessionInteruption;
+
 #if SIMULATE_CAMERA
 - (void)considerItScanned;
 #endif
