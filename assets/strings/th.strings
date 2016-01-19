@@ -17,6 +17,7 @@
 "ok" = "ตกลง";
 "paypal_logo" = "PayPal";
 "scan_guide" = "ถือบัตรไว้ตรงนี้\nเครื่องจะสแกนโดยอัตโนมัติ";
+"scan_image" = "Scan Image";
 
 "cardtype_americanexpress" = "American Express";
 "cardtype_cartaaura" = "Carta Aura";

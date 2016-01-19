@@ -17,6 +17,7 @@
 "ok" = "确定";
 "paypal_logo" = "PayPal";
 "scan_guide" = "持卡置于此处。\n设备会自动扫描卡。";
+"scan_image" = "Scan Image";
 
 "cardtype_americanexpress" = "American Express";
 "cardtype_cartaaura" = "Carta Aura";

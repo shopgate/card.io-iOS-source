@@ -17,6 +17,7 @@
 "ok" = "Tamam";
 "paypal_logo" = "PayPal";
 "scan_guide" = "Kartınızı buraya tutun.\nOtomatik olarak taranacaktır.";
+"scan_image" = "Scan Image";
 
 "cardtype_americanexpress" = "American Express";
 "cardtype_cartaaura" = "Carta Aura";
