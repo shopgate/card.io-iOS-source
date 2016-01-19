@@ -21,6 +21,7 @@
 #import "CardIOVideoFrame.h"
 #import "CardIOVideoStream.h"
 #import "CardIOLocalizer.h"
+#import "CardIOOutput.h"
 
 #define kLogoAlpha 0.6f
 #define kGuideLayerTextAlpha 0.6f
@@ -176,6 +177,19 @@
 
 - (void)startVideoStreamSession {
   [self.videoStream startSession];
+  
+  //When no card scanner is set the shutter has to be opend directly
+  if (self.config.outputs.count) {
+    BOOL openShutterDirectly = YES;
+    for (CardIOOutput *output in self.config.outputs) {
+      if ([[output class] isSubclassOfClass:[CardIOOutputCardScanner class]]) {
+        openShutterDirectly = NO;
+      }
+    }
+    if (openShutterDirectly) {
+      [self.shutter setOpen:YES];
+    }
+  }
 
   // If we don't do this, then when the torch was on, and the card read failed,
   // it still shows as on when this view is re-displayed, even though the ending
