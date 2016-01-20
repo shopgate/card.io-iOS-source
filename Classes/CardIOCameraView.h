@@ -8,6 +8,7 @@
 #import <UIKit/UIKit.h>
 #import "CardIOGuideLayer.h"
 #import "CardIOVideoStreamDelegate.h"
+#import "CardIOOutput.h"
 
 #define kRotationAnimationDuration 0.2f
 
@@ -39,6 +40,10 @@
 
 -(void)forceSessionInterruption:(BOOL)forceSessionInterruption;
 -(void)autoInterruptOnCompletion:(void(^)(void))onCompletion;
+
+-(void)addOutput:(CardIOOutput *)output;
+-(void)removeOutput:(CardIOOutput *)output;
+
 
 @property(nonatomic, strong, readonly)  CardIOCardScanner *scanner;
 @property(nonatomic, weak, readwrite)   id<CardIOVideoStreamDelegate> delegate;

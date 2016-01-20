@@ -11,6 +11,7 @@
 #import "CardIOVideoStreamDelegate.h"
 #import <AVFoundation/AVFoundation.h>
 #import "dmz.h"
+#import "CardIOOutput.h"
 
 #define LOG_FPS 1 // for performance tuning/testing
 
@@ -39,6 +40,9 @@
 
 -(void)forceSessionInterruption:(BOOL)forceSessionInterruption;
 -(void)autoInterruptOnCompletion:(void(^)(void))onCompletion;
+
+-(void)addOutput:(CardIOOutput*)output;
+-(void)removeOutput:(CardIOOutput*)output;
 
 #if SIMULATE_CAMERA
 - (void)considerItScanned;

@@ -6,6 +6,7 @@
 #import <UIKit/UIKit.h>
 #import "CardIOViewDelegate.h"
 #import "CardIODetectionMode.h"
+@class CardIOOutput;
 
 /// CardIOView is one of two main entry points into the card.io SDK.
 /// @see CardIOPaymentViewController
@@ -107,6 +108,10 @@
 @property (nonatomic, assign, readwrite) BOOL forceSessionInterruption;
 
 @property (nonatomic, assign, readwrite) BOOL autoSessionStop;
+
+
+-(void)addOutput:(CardIOOutput*)output;
+-(void)removeOutput:(CardIOOutput*)output;
 
 /// Name for orientation change notification.
 extern NSString * const CardIOScanningOrientationDidChangeNotification;

@@ -13,6 +13,11 @@
 #define CardIOLog(format, args...)
 #endif
 #define CardIOLogWithLevel(level,format, args...) [CardIOLogger logWithLevel:level message:format, ## args];
+#define CardIOLogVerbose(format, args...) [CardIOLogger logWithLevel:CardIOLevelVerbose, message:format, ## args];
+#define CardIOLogDebug(format, args...) [CardIOLogger logWithLevel:CardIOLevelDebug, message:format, ## args];
+#define CardIOLogInfo(format, args...) [CardIOLogger logWithLevel:CardIOLevelInfo message:format, ## args];
+#define CardIOLogWarn(format, args...) [CardIOLogger logWithLevel:CardIOLevelWarning message:format, ## args];
+#define CardIOLogError(format, args...) [CardIOLogger logWithLevel:CardIOLevelError message:format, ## args];
 
 @interface CardIOMacros : NSObject
 
@@ -29,3 +34,9 @@
 #define iOS_7_PLUS         (iOS_MAJOR_VERSION >= 7)
 #define iOS_6              (iOS_MAJOR_VERSION == 6)
 #define iOS_5              (iOS_MAJOR_VERSION == 5)
+
+
+
+
+#define IS_CARDIOOUTPUT(output) [[output class] isSubclassOfClass:[CardIOOutput class]]
+#define ClassStringFromObject(object) NSStringFromClass([object class])

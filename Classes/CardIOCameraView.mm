@@ -179,7 +179,7 @@
   [self.videoStream startSession];
   
   //When no card scanner is set the shutter has to be opend directly
-  if (self.config.outputs.count) {
+  if (self.config.outputs) {
     BOOL openShutterDirectly = YES;
     for (CardIOOutput *output in self.config.outputs) {
       if ([[output class] isSubclassOfClass:[CardIOOutputCardScanner class]]) {
@@ -622,6 +622,18 @@
 
 -(void)autoInterruptOnCompletion:(void(^)(void))onCompletion{
   [self.videoStream autoInterruptOnCompletion:onCompletion];
+}
+
+#pragma mark - outputs
+
+-(void)addOutput:(CardIOOutput *)output {
+  //since videostream is instanciated directly at cameraView init, the add can directly given to video stream
+  [self.videoStream addOutput:output];
+}
+
+-(void)removeOutput:(CardIOOutput *)output {
+  //since videostream is instanciated directly at cameraView init, the add can directly given to video stream
+  [self.videoStream removeOutput:output];
 }
 
 @end

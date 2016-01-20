@@ -29,5 +29,5 @@
 @property(nonatomic, assign, readwrite) CardIODetectionMode detectionMode;
 
 
-@property(nonatomic, strong) NSArray *outputs;
+@property(nonatomic, copy) NSArray *outputs;
 @end

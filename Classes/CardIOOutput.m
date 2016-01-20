@@ -41,8 +41,8 @@
 
 @implementation CardIOOutputCardScanner
 
-+(instancetype)outputCardScannerDoOnCardDetection:(void(^)(CardIOView *cardIOView, CardIOCreditCardInfo *detectedCardInfo))onDetectedCard doOnError:(void(^)(NSError** error))onError{
-  return [[CardIOOutputCardScanner alloc] initCardScannerDoOnCardDetection:onDetectedCard doOnError:onError];
++(instancetype)outputCardScannerDoOnCardDetection:(void(^)(CardIOView *cardIOView, CardIOCreditCardInfo *detectedCardInfo))onDetectedCard{
+  return [[CardIOOutputCardScanner alloc] initCardScannerDoOnCardDetection:onDetectedCard];
 }
 
 -(instancetype)init {
@@ -53,10 +53,9 @@
   return nil;
 }
 
--(instancetype)initCardScannerDoOnCardDetection:(void (^)(CardIOView *, CardIOCreditCardInfo *))onDetectedCard doOnError:(void (^)(NSError *__autoreleasing *))onError{
+-(instancetype)initCardScannerDoOnCardDetection:(void (^)(CardIOView *, CardIOCreditCardInfo *))onDetectedCard{
   if (self = [super init]) {
     self.onDetectedCard = onDetectedCard;
-    self.onError = onError;
     return self;
   }
   return nil;
@@ -68,8 +67,8 @@
 
 @implementation CardIOOutputMetadataScanner
 
-+(instancetype)outputMetadataScannerWithTypes:(NSArray*)metadataTypes doOnMetadataDetection:(void (^)(AVCaptureOutput *, NSArray *, AVCaptureConnection *))onDetectedMetadata doOnError:(void (^)(NSError *__autoreleasing *))onError{
-  return [[CardIOOutputMetadataScanner alloc] initWithTypes:metadataTypes doOnMetadataDetection:onDetectedMetadata doOnError:onError];
++(instancetype)outputMetadataScannerWithTypes:(NSArray*)metadataTypes doOnMetadataDetection:(void (^)(AVCaptureOutput *, NSArray *, AVCaptureConnection *))onDetectedMetadata{
+  return [[CardIOOutputMetadataScanner alloc] initWithTypes:metadataTypes doOnMetadataDetection:onDetectedMetadata];
 }
 
 -(instancetype)init {
@@ -80,11 +79,10 @@
   return nil;
 }
 
--(instancetype)initWithTypes:(NSArray*)metadataTypes doOnMetadataDetection:(void(^)(AVCaptureOutput *captureOutput, NSArray *outputMetadataObjects, AVCaptureConnection *fromConnection))onDetectedMetaData doOnError:(void(^)(NSError** error))onError{
+-(instancetype)initWithTypes:(NSArray*)metadataTypes doOnMetadataDetection:(void(^)(AVCaptureOutput *captureOutput, NSArray *outputMetadataObjects, AVCaptureConnection *fromConnection))onDetectedMetaData{
   if (self = [super init]) {
     self.metadataTypes = metadataTypes;
     self.onDetectedMetadata = onDetectedMetaData;
-    self.onError = onError;
     return self;
   }
   return nil;
@@ -116,9 +114,6 @@
 
 -(void)wasAddedByVideoStream:(CardIOVideoStream *)videoStream{
   ((AVCaptureMetadataOutput*)self.captureOutput).metadataObjectTypes = self.metadataTypes;
-  
-  //metadata types are no longer needed, so we can release them
-  self.metadataTypes = nil;
 }
 
 @end
@@ -136,11 +131,11 @@
   return nil;
 }
 
-+(instancetype)outputImageScannerWithOutputSettings:(NSDictionary*)outputSettings doOnScannedImmage:(void(^)(UIImage* scannedImage))onScannedImage doOnError:(void(^)(NSError* error,NSString* requestId))onError{
++(instancetype)outputImageScannerWithOutputSettings:(NSDictionary*)outputSettings doOnScannedImmage:(void(^)(UIImage* scannedImage, NSDictionary *info))onScannedImage doOnError:(void(^)(NSError* error, NSDictionary *info))onError{
   return [[CardIOOutputImageScanner alloc] initWithOutputSettings:(NSDictionary*)outputSettings doOnScannedImmage:onScannedImage doOnError:onError];
 }
 
--(instancetype)initWithOutputSettings:(NSDictionary*)outputSettings doOnScannedImmage:(void(^)(UIImage* scannedImage))onScannedImage doOnError:(void(^)(NSError* error,NSString* requestId))onError{
+-(instancetype)initWithOutputSettings:(NSDictionary*)outputSettings doOnScannedImmage:(void(^)(UIImage* scannedImage, NSDictionary *info))onScannedImage doOnError:(void(^)(NSError* error, NSDictionary* info))onError{
   if ((self = [super init])) {
     self.onScannedImage = onScannedImage;
     self.onError = onError;
@@ -165,7 +160,7 @@
 }
 
 
--(void)scanImageWithMaxWidth:(NSNumber*)maxWidth maxHeight:(NSNumber*)maxHeight requestID:(NSString *)requestID {
+-(void)scanImageWithMaxWidth:(NSNumber*)maxWidth maxHeight:(NSNumber*)maxHeight info:(NSDictionary *)info {
   //number in nil is maximal height or width
   
   __block CGFloat block_maxWidth = maxWidth ? MAX([maxWidth floatValue], 1) : 0;
@@ -186,7 +181,7 @@
     [((AVCaptureStillImageOutput*)self.captureOutput) captureStillImageAsynchronouslyFromConnection:videoConnection completionHandler:^(CMSampleBufferRef imageSampleBuffer, NSError *error) {
       
       if (error) {
-        weakSelf.onError(error,requestID);
+        weakSelf.onError(error,info);
         return;
       }
       
@@ -214,11 +209,11 @@
       
       
       CFRetain(imageSampleBuffer);
-      UIImage * image = [weakSelf imageFromSampleBuffer:imageSampleBuffer withMaxWidth:0 maxHeight:0 RotatedByDegrees:
+      UIImage * image = [weakSelf imageFromSampleBuffer:imageSampleBuffer withMaxWidth:block_maxWidth maxHeight:block_maxHeight RotatedByDegrees:
                          rotationDegrees];
       CFRelease(imageSampleBuffer);
       
-      weakSelf.onScannedImage(image);
+      weakSelf.onScannedImage(image,info);
     }];
   }
   

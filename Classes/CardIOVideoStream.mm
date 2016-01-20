@@ -443,50 +443,12 @@
   [self.captureSession addInput:self.cameraInput];
   self.captureSession.sessionPreset = self.config.forcedSessionPreset ? self.config.forcedSessionPreset : kCaptureSessionDefaultPresetResolution;
   
-  //set card output
-  BOOL setCardConfig = NO;
-  if (!self.config.outputs.count){
-    setCardConfig = YES;
-  } else {
-    for (CardIOOutput * output in self.config.outputs) {
-      if ([[output class] isSubclassOfClass:[CardIOOutputCardScanner class]]) {
-        setCardConfig = YES;
-      }
-      
-      output.videoStream = self;
-    }
-  }
   
-
-  
-  //set rest of additional outputs
-  if (self.config.outputs.count){
-    for (CardIOOutput * output in self.config.outputs) {
-      if (![[output class] isSubclassOfClass:[CardIOOutputCardScanner class]]) {
-        [self.captureSession addOutput:output.captureOutput];
-      }
-      
-      
-      if ([output respondsToSelector:@selector(wasAddedByVideoStream:)]) {
-        [output wasAddedByVideoStream:self];
-      }
+  //add outputs
+  if (self.config.outputs) {
+    for (CardIOOutput * output in [self.config.outputs copy]) {
+        [self addOutput:output toSession:self.captureSession];
     }
-  }
-  
-  if (setCardConfig){
-    _videoOutput = [[AVCaptureVideoDataOutput alloc] init];
-    if([CardIODevice shouldSetPixelFormat]) {
-      NSDictionary *videoOutputSettings = [NSDictionary dictionaryWithObject:[NSNumber numberWithUnsignedInteger:kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange]
-                                                                      forKey:(NSString *)kCVPixelBufferPixelFormatTypeKey];
-      [self.videoOutput setVideoSettings:videoOutputSettings];
-    }
-    self.videoOutput.alwaysDiscardsLateVideoFrames = YES;
-    // NB: DO NOT USE minFrameDuration. minFrameDuration causes focusing to
-    // slow down dramatically, which causes significant ux pain.
-    dispatch_queue_t queue = dispatch_queue_create(kVideoQueueName, NULL);
-    [self.videoOutput setSampleBufferDelegate:self queue:queue];
-    
-    [self.captureSession addOutput:self.videoOutput];
   }
   
 #endif
@@ -497,9 +459,88 @@
 - (void)removeInputAndOutput {
 #if USE_CAMERA
   [self.captureSession removeInput:self.cameraInput];
-  [self.videoOutput setSampleBufferDelegate:nil queue:NULL];
-  [self.captureSession removeOutput:self.videoOutput];
+  
+  if (self.config.outputs) {
+    for (CardIOOutput * output in [self.config.outputs copy]) {
+      [self removeOutput:output fromSession:self.captureSession];
+    }
+  }
 #endif
+}
+
+//addOutput is for adding outputs seperatedly after CardIOView is already instanciated
+-(void)addOutput:(CardIOOutput*)output {
+  [self.config addOutput:output];
+  if (self.running) {
+    //the session is already started, so we hace to add them to the session as well as to the config
+    [self addOutput:output toSession:self.captureSession];
+  }
+}
+
+
+-(void)addOutput:(CardIOOutput *)output toSession:(AVCaptureSession*)session{
+  if ([[output class] isSubclassOfClass:[CardIOOutputCardScanner class]]) {
+    if (self.videoOutput) {
+      CardIOLogWarn(@"CardIOOutputCardScanner does already exit and wont't be added");
+      [self.config removeOutput:output];
+    } else {
+      [self addCardScannerToSession:session];
+    }
+  }
+  else {
+    [session addOutput:output.captureOutput];
+    output.videoStream = self;
+    if ([output respondsToSelector:@selector(wasAddedByVideoStream:)]) {
+      [output wasAddedByVideoStream:self];
+    }
+  }
+}
+
+-(void)addCardScannerToSession:(AVCaptureSession*)session{
+  _videoOutput = [[AVCaptureVideoDataOutput alloc] init];
+  if([CardIODevice shouldSetPixelFormat]) {
+    NSDictionary *videoOutputSettings = [NSDictionary dictionaryWithObject:[NSNumber numberWithUnsignedInteger:kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange]
+                                                                    forKey:(NSString *)kCVPixelBufferPixelFormatTypeKey];
+    [self.videoOutput setVideoSettings:videoOutputSettings];
+  }
+  self.videoOutput.alwaysDiscardsLateVideoFrames = YES;
+  // NB: DO NOT USE minFrameDuration. minFrameDuration causes focusing to
+  // slow down dramatically, which causes significant ux pain.
+  dispatch_queue_t queue = dispatch_queue_create(kVideoQueueName, NULL);
+  [self.videoOutput setSampleBufferDelegate:self queue:queue];
+  
+  [session addOutput:self.videoOutput];
+}
+
+//removeOutput is for adding outputs seperatedly after CardIOView is already instanciated
+-(void)removeOutput:(CardIOOutput*)output {
+  [self.config removeOutput:output];
+  if (self.running){
+    //the session is already started, so we hace to remove them from the session as well as to the config
+    [self removeOutput:output fromSession:self.captureSession];
+  }
+}
+
+
+-(void)removeOutput:(CardIOOutput *)output fromSession:(AVCaptureSession*)session{
+  if ([[output class] isSubclassOfClass:[CardIOOutputCardScanner class]]) {
+    if (self.videoOutput) {
+      [self removeCardScannerFromSession:session];
+    }
+  }
+  else {
+    [session removeOutput:output.captureOutput];
+    output.videoStream = nil;
+    if ([output respondsToSelector:@selector(wasAddedByVideoStream:)]) {
+      [output wasAddedByVideoStream:self];
+    }
+  }
+}
+
+-(void)removeCardScannerFromSession:(AVCaptureSession*)session {
+  [self.videoOutput setSampleBufferDelegate:nil queue:NULL];
+  [session removeOutput:self.videoOutput];
+  self.videoOutput = nil;
 }
 
 - (void)startSession {

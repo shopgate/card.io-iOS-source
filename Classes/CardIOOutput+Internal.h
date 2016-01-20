@@ -29,16 +29,14 @@
 
 @interface CardIOOutputCardScanner ()
 @property (nonatomic, copy) void(^onDetectedCard)(CardIOView *cardIOView, CardIOCreditCardInfo *detectedCardInfo);
-@property (nonatomic, copy) void(^onError)(NSError** error);
--(instancetype)initCardScannerDoOnCardDetection:(void(^)(CardIOView *cardIOView, CardIOCreditCardInfo *detectedCardInfo))onDetectedCard doOnError:(void(^)(NSError** error))onError;
+-(instancetype)initCardScannerDoOnCardDetection:(void(^)(CardIOView *cardIOView, CardIOCreditCardInfo *detectedCardInfo))onDetectedCard;
 @end
 
 
 @interface CardIOOutputMetadataScanner ()<AVCaptureMetadataOutputObjectsDelegate>
 @property (nonatomic, strong) NSArray* metadataTypes;
 @property (nonatomic, copy) void(^onDetectedMetadata)(AVCaptureOutput *captureOutput, NSArray *outputMetadataObjects, AVCaptureConnection *fromConnection);
-@property (nonatomic, copy) void(^onError)(NSError** error);
--(instancetype)initWithTypes:(NSArray*)metadataTypes doOnMetadataDetection:(void(^)(AVCaptureOutput *captureOutput, NSArray *outputMetadataObjects, AVCaptureConnection *fromConnection))onDetectedMetadata doOnError:(void(^)(NSError** error))onError;
+-(instancetype)initWithTypes:(NSArray*)metadataTypes doOnMetadataDetection:(void(^)(AVCaptureOutput *captureOutput, NSArray *outputMetadataObjects, AVCaptureConnection *fromConnection))onDetectedMetadata;
 @end
 
 
@@ -46,8 +44,11 @@
 
 
 @interface CardIOOutputImageScanner ()
-@property (nonatomic, copy) void(^onScannedImage)(UIImage* scannedImage);
-@property (nonatomic, copy) void(^onError)(NSError* error,NSString* requestId);
+@property (nonatomic, copy) void(^onScannedImage)(UIImage* scannedImage, NSDictionary *info);
+@property (nonatomic, copy) void(^onError)(NSError* error,NSDictionary *info);
 @property (nonatomic, strong) NSDictionary* outputSettings;
--(instancetype)initWithOutputSettings:(NSDictionary*)outputSettings doOnScannedImmage:(void(^)(UIImage* scannedImage))onScannedImage doOnError:(void(^)(NSError* error,NSString* requestId))onError;
+
+-(instancetype)initWithOutputSettings:(NSDictionary*)outputSettings
+                    doOnScannedImmage:(void(^)(UIImage* scannedImage, NSDictionary *info))onScannedImage
+                            doOnError:(void(^)(NSError* error, NSDictionary* info))onError;
 @end

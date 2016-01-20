@@ -15,7 +15,7 @@
 #import "CardIOCameraView.h"
 #import "CardIOCardOverlay.h"
 #import "CardIOCardScanner.h"
-#import "CardIOConfig.h"
+#import "CardIOConfig+Internal.h"
 #import "CardIOCreditCardInfo.h"
 #import "CardIODevice.h"
 #import "CardIOCGGeometry.h"
@@ -172,15 +172,12 @@ NSString * const CardIOScanningOrientationAnimationDuration = @"CardIOScanningOr
 - (void)implicitStart {
   if (!self.scanHasBeenStarted && self.window && self.superview && !self.hidden) {
     if (![CardIOUtilities canReadCardWithCamera]) {
-      if (!self.config.outputs.count) {
-        //only card-scanner
-        if (self.delegate) {
+        if (self.delegate && !self.config.outputs) {
+          //only card-scanner
           [self.delegate cardIOView:self didScanCard:nil];
         } else {
           [self sendCardInfoViaOutput:nil];
         }
-      }
-      
       return;
     }
     
@@ -253,6 +250,34 @@ NSString * const CardIOScanningOrientationAnimationDuration = @"CardIOScanningOr
   if (self.cameraView) {
     CardIOLog(@"Stopping CameraViewController session");
     [self.cameraView stopVideoStreamSession];
+  }
+}
+
+#pragma mark - outputs
+
+-(void)addOutput:(CardIOOutput *)output {
+  if (!IS_CARDIOOUTPUT(output)) {
+    CardIOLogError(@"Couldn't add output from type <%@>, since it isn't a CardIOOutput", ClassStringFromObject(output));
+    return;
+  }
+  if (self.cameraView){
+    [self.cameraView addOutput:output];
+  } else {
+    //the view has not yet instanciated a camera view and thus no avcaputre session, so it's enaough to add this in the config
+    [self.config addOutput:output];
+  }
+}
+
+-(void)removeOutput:(CardIOOutput *)output {
+  if (!IS_CARDIOOUTPUT(output)) {
+    CardIOLogError(@"Couldn't remove output from type <%@>, since it isn't a CardIOOutput", ClassStringFromObject(output));
+    return;
+  }
+  if (self.cameraView){
+    [self.cameraView removeOutput:output];
+  } else {
+    //the view has not yet instanciated a camera view and thus no avcaputre session, so it's enaough to remove this in the config
+    [self.config removeOutput:output];
   }
 }
 
@@ -375,10 +400,10 @@ NSString * const CardIOScanningOrientationAnimationDuration = @"CardIOScanningOr
     }];
   }
   else {
-    if (self.delegate) {
+    if (self.delegate && !self.config.outputs) {
       self.transitionView.hidden = YES;
       [self.delegate cardIOView:self didScanCard:cardInfo];
-    } else if (self.config.outputs.count) {
+    } else if (self.config.outputs) {
       [self sendCardInfoViaOutput:cardInfo];
     }
   }
