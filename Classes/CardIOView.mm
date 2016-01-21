@@ -107,11 +107,25 @@ NSString * const CardIOScanningOrientationAnimationDuration = @"CardIOScanningOr
   _config = [[CardIOConfig alloc] init];
   _config.scannedImageDuration = 1.0;
   _config.autoSessionStop = YES;
+  _config.cardScannerEnabled = YES;
 }
 
 -(void)additionalInitWithOutputs:(NSArray*)outputs captureSessionPreset:(NSString *)sessionPreset {
+  if (!outputs) {
+    CardIOLogVerbose(@"CardIOView init with outputs where the outputs were nil. Outputs have to be added separately");
+    outputs = [NSArray array];
+  }
   self.config.outputs = outputs;
   self.config.forcedSessionPreset = sessionPreset;
+  
+  //define whether cardscanner is enabled or not
+  _config.cardScannerEnabled = NO;
+  for (CardIOOutput *output in self.config.outputs) {
+    if ([[output class] isSubclassOfClass:[CardIOOutputCardScanner class]]) {
+      _config.cardScannerEnabled = YES;
+    }
+  }
+       
 }
 
 - (CGSize)sizeThatFits:(CGSize)size {
@@ -173,9 +187,10 @@ NSString * const CardIOScanningOrientationAnimationDuration = @"CardIOScanningOr
   if (!self.scanHasBeenStarted && self.window && self.superview && !self.hidden) {
     if (![CardIOUtilities canReadCardWithCamera]) {
         if (self.delegate && !self.config.outputs) {
-          //only card-scanner
+          //only card-scanner - delegate is used
           [self.delegate cardIOView:self didScanCard:nil];
         } else {
+          //outputs are used - card scaner completion block will be used
           [self sendCardInfoViaOutput:nil];
         }
       return;
@@ -207,21 +222,30 @@ NSString * const CardIOScanningOrientationAnimationDuration = @"CardIOScanningOr
 #pragma mark - Property accessors (passthroughs to Config, but with direct action)
 
 -(void)setForceTorchToBeOn:(BOOL)forceTorchToBeOn{
+  CardIOLogVerbose(@"Torch forced to be %@", forceTorchToBeOn ? @"ON" : @"OFF");
   self.config.forceTorchToBeOn = forceTorchToBeOn;
 }
 
--(void)setHiddenCardGuide:(BOOL)hiddenCardGuide{
-  [self setHiddenCardGuide:hiddenCardGuide animated:NO];
+-(void)setCardScannerEnabled:(BOOL)cardScannerEnabled{
+  [self setCardScannerEnabled:cardScannerEnabled animated:NO];
 }
 
--(void)setHiddenCardGuide:(BOOL)hiddenCardGuide animated:(BOOL)animated {
-  self.config.hiddenCardGuide = hiddenCardGuide;
-  [self.cameraView adaptGuideLayerAnimated:animated];
+-(void)setCardScannerEnabled:(BOOL)cardScannerEnabled animated:(BOOL)animated {
+  if (!self.config.outputs) {
+    CardIOLogWarn(@"CardScanner cannot be enabled or disabled when not using CardIOOutputs. Scanner will remain anabled.");
+    return;
+  }
+  if (self.cardScannerEnabled != cardScannerEnabled){
+    CardIOLogVerbose(@"Cardscanner will be%@ set to %@ABLED.", animated ? @" animated" : @"", cardScannerEnabled ? @"EN" : @"DIS");
+    self.config.cardScannerEnabled = cardScannerEnabled;
+    [self.cameraView adaptGuideLayerVisibilityAnimated:animated];
+  }
 }
 
 -(void)setForceSessionInterruption:(BOOL)forceSessionInterruption {
+  CardIOLogVerbose(@"CardIO will%@ be forced to interrupt session.", forceSessionInterruption ? @"" : @" no longer");
   self.config.forceSessionInterruption = forceSessionInterruption;
-  [self.cameraView forceSessionInterruption:forceSessionInterruption];
+  [self.cameraView adaptSessionInterruption];
 }
 
 #pragma mark - Property accessors (passthroughs to CardIOCameraView)
@@ -256,27 +280,37 @@ NSString * const CardIOScanningOrientationAnimationDuration = @"CardIOScanningOr
 #pragma mark - outputs
 
 -(void)addOutput:(CardIOOutput *)output {
+  if (!output) {
+    CardIOLogError(@"Couldn't add nil as output, output has to be a CardIOOutput");
+    return;
+  }
   if (!IS_CARDIOOUTPUT(output)) {
     CardIOLogError(@"Couldn't add output from type <%@>, since it isn't a CardIOOutput", ClassStringFromObject(output));
     return;
   }
   if (self.cameraView){
+    //the camera view has been instanciated, the camera view, so it hass to add
     [self.cameraView addOutput:output];
   } else {
-    //the view has not yet instanciated a camera view and thus no avcaputre session, so it's enaough to add this in the config
+    //the view has not yet instanciated a camera view and thus no avcaputre session, so it's enough to add this in the config
     [self.config addOutput:output];
   }
 }
 
 -(void)removeOutput:(CardIOOutput *)output {
+  if (!output) {
+    CardIOLogError(@"Couldn't remove nil as output, output has to be a CardIOOutput");
+    return;
+  }
   if (!IS_CARDIOOUTPUT(output)) {
     CardIOLogError(@"Couldn't remove output from type <%@>, since it isn't a CardIOOutput", ClassStringFromObject(output));
     return;
   }
   if (self.cameraView){
+    //the camera view has to remove it
     [self.cameraView removeOutput:output];
   } else {
-    //the view has not yet instanciated a camera view and thus no avcaputre session, so it's enaough to remove this in the config
+    //the view has not yet instanciated a camera view and thus no avcaputre session, so it's enough to remove this in the config
     [self.config removeOutput:output];
   }
 }
@@ -293,6 +327,7 @@ NSString * const CardIOScanningOrientationAnimationDuration = @"CardIOScanningOr
 
 - (void)didDetectCard:(CardIOVideoFrame *)processedFrame {
   if (self.config.isAutoInterupted) {
+    //if it is currently auto interrupted we do not proccess any frame
     return;
   }
   
@@ -318,6 +353,7 @@ NSString * const CardIOScanningOrientationAnimationDuration = @"CardIOScanningOr
 
 - (void)didScanCard:(CardIOVideoFrame *)processedFrame {
   if (self.config.isAutoInterupted) {
+    //if it is currently auto interrupted we do not proccess any frame
     return;
   }
   
@@ -390,7 +426,7 @@ NSString * const CardIOScanningOrientationAnimationDuration = @"CardIOScanningOr
     
     [self.transitionView animateWithCompletion:^{
       dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(self.scannedImageDuration * NSEC_PER_SEC)), dispatch_get_main_queue(), ^(void){
-        if (self.delegate) {
+        if (self.delegate && !self.config.outputs) {
           [self.delegate cardIOView:self didScanCard:cardInfo];
         } else {
           [self sendCardInfoViaOutput:cardInfo];
@@ -463,7 +499,7 @@ CONFIG_PASSTHROUGH_READWRITE(BOOL, autoSessionStop, AutoSessionStop)
 CONFIG_PASSTHROUGH_READWRITE(CardIODetectionMode, detectionMode, DetectionMode)
 
 CONFIG_PASSTHROUGH_GETTER(BOOL, forceTorchToBeOn)
-CONFIG_PASSTHROUGH_GETTER(BOOL, hiddenCardGuide)
+CONFIG_PASSTHROUGH_GETTER(BOOL, cardScannerEnabled)
 CONFIG_PASSTHROUGH_GETTER(BOOL, forceSessionInterruption)
 
 

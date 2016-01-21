@@ -12,9 +12,21 @@
 /// @see CardIOPaymentViewController
 @interface CardIOView : UIView
 
-/// These initializers are currently determined to be used only by using the CardIOView without the CardIOPaymentViewController
+#pragma mark - Initializers to use with CardIOOutputs
+
+/// These initializers are currently determined to be used only by using the CardIOView without the CardIOViewController
+/// and enhances the cardIO framework to work with additional outputs or without the card scanner e.g. the image scanner
+/// and a meta data scanner. The output array has to contain objects of type CardIOOutput.
+///
+/// Using one of these initializers no delegate has to be set.
+
+/// Initializer for being used with NSCoder and array of CardIOOutputs to set up.
 -(instancetype)initWithCoder:(NSCoder *)aDecoder outputs:(NSArray*)outputs;
+
+/// Initializer to use with frame and array of CardIOOutputs to set up.
 -(instancetype)initWithFrame:(CGRect)frame outputs:(NSArray*)outputs;
+
+/// Initializer to use with frame, array of CardIOOutputs to set up and the possibility of setting a sessionPreset.
 -(instancetype)initWithFrame:(CGRect)frame outputs:(NSArray*)outputs captureSessionPreset:(NSString*)sessionPreset;
 
 
@@ -100,17 +112,39 @@
 /// Defaults to 1.0.
 @property(nonatomic, assign, readwrite) CGFloat scannedImageDuration;
 
+/// Setting to YES forces the torch of the camera to be on. Setting to NO the card scanner decides if it needs a torch light.
+/// Default is NO.
 @property(nonatomic, assign, readwrite) BOOL forceTorchToBeOn;
 
-@property (nonatomic, assign, readwrite) BOOL hiddenCardGuide;
--(void)setHiddenCardGuide:(BOOL)hiddenCardGuide animated:(BOOL)animated;
+/// In case there are used cardIO outputs to manage the scanner, setting this to YES the cardScanner is active and the card guide is visible.
+/// Setting this to no, the cardScanner isn't active and the card guide isn't visible.
+/// Default: In case no card outputs are used default is YES. In case that there are used cardIO outputs, the default value depends on whether
+/// there is a card scanner output. When there is a card scanner output then the value is YES, in case there is no card scanner output,
+/// the default value is NO;
+@property(nonatomic, assign, readwrite) BOOL cardScannerEnabled;
 
+/// Possibility to enable or disable the cardScanner, but the card guide will be shown or hidden animted or not depending on the parameter
+-(void)setCardScannerEnabled:(BOOL)cardScannerEnabled animated:(BOOL)animated;
+
+/// Setting to YES forces to session to interrupt (stop), the last visible screen of the preview view remains visible.
+/// Setting to NO let the preview screen work again.
+/// Default is NO.
 @property (nonatomic, assign, readwrite) BOOL forceSessionInterruption;
 
+/// Setting to YES has the cardIO view to work completly after a card has been scanned completely.
+/// After this has happend the cardIO view can neither scan a another card, nor scan an image, nor scan other meta data
+/// Setting to NO has the cardIO view to work again after it has scanned a credit card and reinitialized. Then it can also
+/// scan either another credit card, or an image or other meta data.
+/// During this time, the cardIO view waits to continue a little time to work again, the cardIO view could be forced to
+/// interrupt to delay this time, using the forceSessionInterruption property.
 @property (nonatomic, assign, readwrite) BOOL autoSessionStop;
 
 
+/// After the scanner was initialzed for using CardIOOutputs, other CardIOOutputs can be be add by using this method.
 -(void)addOutput:(CardIOOutput*)output;
+
+/// After the scanner was initialzed fo using CardIOOutputs, CardIOOutputs, that are currently used by the cardIO view
+/// can be be removed by using this method.
 -(void)removeOutput:(CardIOOutput*)output;
 
 /// Name for orientation change notification.

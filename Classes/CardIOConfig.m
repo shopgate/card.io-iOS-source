@@ -22,6 +22,7 @@
 
 -(void)addOutput:(CardIOOutput *)output {
   self.outputs = [self.outputs arrayByAddingObject:output];
+  CardIOLogVerbose(@"CardIOOutput %@ of type %@ has been added.", output ,ClassStringFromObject(output));
 }
 
 -(BOOL)removeOutput:(CardIOOutput *)output {
@@ -29,10 +30,11 @@
     NSMutableArray* outputs = [self.outputs mutableCopy];
     [outputs removeObject:output];
     self.outputs = outputs;
+    CardIOLogVerbose(@"CardIOOutput %@ of type %@ has been removed.", output ,ClassStringFromObject(output));
     return YES;
   } else {
     //TODO: Error
-    CardIOLogWithLevel(CardIOLevelWarning, @"Couldn't remove output <%@>, since it wasn't set before",NSStringFromClass([output class]));
+    CardIOLogWithLevel(CardIOLogLevelWarning, @"Couldn't remove output <%@>, since it wasn't set before",NSStringFromClass([output class]));
     return NO;
   }
 }

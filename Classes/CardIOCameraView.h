@@ -34,14 +34,26 @@
 // CGRect for the actual camera preview area within the cameraView
 - (CGRect)cameraPreviewFrame;
 
+/// Setting to YES forces the torch of the camera to be on. Setting to NO the card scanner decides if it needs a torch light.
+/// Default is NO.
 - (void) torchIsForcedToBeOn:(BOOL)torchIsForcedToBeOn;
 
--(void)adaptGuideLayerAnimated:(BOOL)animated;
+/// Intends the camera view to apdapt the visibility to the current state in the according config object. This can
+/// happen animated or non-animated
+-(void)adaptGuideLayerVisibilityAnimated:(BOOL)animated;
 
--(void)forceSessionInterruption:(BOOL)forceSessionInterruption;
+/// Intends the camera view to interrupt or to continue the session according to the current state in the config object.
+-(void)adaptSessionInterruption;
+
+/// Starts an auto interruption which will interrupt the session for a short time and will continue the session thereafter.
+/// On continuing the session the onComplition block will be called. This method can be called several times, all completionBlocks will be called.
 -(void)autoInterruptOnCompletion:(void(^)(void))onCompletion;
 
+/// After the scanner was initialzed for using CardIOOutputs, other CardIOOutputs can be be add by using this method.
 -(void)addOutput:(CardIOOutput *)output;
+
+/// After the scanner was initialzed fo using CardIOOutputs, CardIOOutputs, that are currently used by the cardIO view
+/// can be be removed by using this method.
 -(void)removeOutput:(CardIOOutput *)output;
 
 

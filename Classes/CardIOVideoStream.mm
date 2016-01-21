@@ -157,7 +157,10 @@
 @property (nonatomic, assign, readwrite) NSTimeInterval lastChangeSignal;
 @property (nonatomic, assign, readwrite) BOOL           lastChangeTorchStateToOFF;
 
+// Returns whether the session is currently auto interrupted
 @property(nonatomic, assign, readwrite) BOOL isAutoInterrupted;
+
+// In this array all completion blocks, that have to be called when the session coontinues after an auto interruption, will be gathered
 @property(nonatomic, strong, readwrite) NSMutableArray * completionBlocksAfterAutoInterruption;
 
 // This semaphore is intended to prevent a crash which was recorded with this exception message:
@@ -353,6 +356,7 @@
 
 - (BOOL)setTorchOn:(BOOL)torchShouldBeOn {
   if (!torchShouldBeOn && self.config.forceTorchToBeOn) {
+    //if someone will stop the torch, but is is forced to be on, it wont be turned off
     return NO;
   }
   return [self changeCameraConfiguration:^{
@@ -444,11 +448,13 @@
   self.captureSession.sessionPreset = self.config.forcedSessionPreset ? self.config.forcedSessionPreset : kCaptureSessionDefaultPresetResolution;
   
   
-  //add outputs
+  //add avcapture outputs depending if outputs are used, or not
   if (self.config.outputs) {
     for (CardIOOutput * output in [self.config.outputs copy]) {
         [self addOutput:output toSession:self.captureSession];
     }
+  } else {
+    [self addCardScannerToSession:self.captureSession];
   }
   
 #endif
@@ -464,6 +470,8 @@
     for (CardIOOutput * output in [self.config.outputs copy]) {
       [self removeOutput:output fromSession:self.captureSession];
     }
+  } else {
+    [self removeCardScannerFromSession:self.captureSession];
   }
 #endif
 }
@@ -531,9 +539,6 @@
   else {
     [session removeOutput:output.captureOutput];
     output.videoStream = nil;
-    if ([output respondsToSelector:@selector(wasAddedByVideoStream:)]) {
-      [output wasAddedByVideoStream:self];
-    }
   }
 }
 
@@ -549,9 +554,7 @@
     [self.camera addObserver:self forKeyPath:@"adjustingFocus" options:(NSKeyValueObservingOptionNew | NSKeyValueObservingOptionInitial) context:nil];
     [self.camera addObserver:self forKeyPath:@"adjustingExposure" options:(NSKeyValueObservingOptionNew | NSKeyValueObservingOptionInitial) context:nil];
     
-    if (!self.config.forceSessionInterruption && !self.isAutoInterrupted){
-      [self.captureSession startRunning];
-    }
+    [self continueSessionIfPossible];
 
     [self changeCameraConfiguration:^{
       if ([self.camera respondsToSelector:@selector(isAutoFocusRangeRestrictionSupported)]) {
@@ -613,10 +616,17 @@
   }
 }
 
--(void)forceSessionInterruption:(BOOL)forceSessionInterruption {
-  if (forceSessionInterruption && self.captureSession.isRunning) {
+-(void)adaptSessionInterruption {
+  if (self.config.forceSessionInterruption && self.captureSession.isRunning) {
     [self.captureSession stopRunning];
-  } else if (self.captureSession && !self.captureSession.isRunning && !forceSessionInterruption && self.running /* was once started */ && !self.isAutoInterrupted) {
+  } else {
+    [self continueSessionIfPossible];
+  }
+}
+
+-(void)continueSessionIfPossible{
+  //after it was interrupted, if all flags allow to continue scanner will be continued
+  if (self.captureSession && !self.captureSession.isRunning && !self.config.forceSessionInterruption && self.running /* was once started */ && !self.isAutoInterrupted) {
     [self.captureSession startRunning];
   }
 }
@@ -665,7 +675,7 @@
       self.completionBlocksAfterAutoInterruption = nil;
       if (self.running && !self.config.forceSessionInterruption) {
         [self.delegate videoStream:self didProcessFrame:nil];
-        [self.captureSession startRunning];
+        [self continueSessionIfPossible];
       }
       
     } else {

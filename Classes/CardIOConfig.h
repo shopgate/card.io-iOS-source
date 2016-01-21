@@ -20,7 +20,7 @@
 @property(nonatomic, assign, readwrite) BOOL hideCardIOLogo;
 @property(nonatomic, retain, readwrite) UIView *scanOverlayView;
 @property(nonatomic, assign, readwrite) BOOL forceTorchToBeOn;
-@property(nonatomic, assign, readwrite) BOOL hiddenCardGuide;
+@property(nonatomic, assign, readwrite) BOOL cardScannerEnabled;
 @property(nonatomic, strong, readwrite) NSString * forcedSessionPreset;
 @property(nonatomic, assign, readwrite) BOOL forceSessionInterruption;
 @property(nonatomic, assign, readwrite) BOOL autoSessionStop;

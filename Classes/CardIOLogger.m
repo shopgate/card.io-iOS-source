@@ -23,7 +23,7 @@
   static dispatch_once_t onceToken;
   dispatch_once(&onceToken, ^{
     __sharedInstance = [[CardIOLogger alloc] init];
-    __sharedInstance.log = ^void(NSUInteger loglevel ,NSString* message) {
+    __sharedInstance.log = ^void(CardIOLogLevel loglevel ,NSString* message) {
       NSLog(@"%@",message);
     };
   });
@@ -36,10 +36,10 @@
   NSString * message = [[NSString alloc]initWithFormat:format arguments:args];
   va_end(args);
   
-  [CardIOLogger sharedInstance].log(CardIOLevelDebug,message);
+  [CardIOLogger sharedInstance].log(CardIOLogLevelDebug,message);
 }
 
-+(void)logWithLevel:(NSUInteger)logLevel message:(NSString *)format, ... {
++(void)logWithLevel:(CardIOLogLevel)logLevel message:(NSString *)format, ... {
   va_list args;
   va_start(args, format);
   NSString * message = [[NSString alloc]initWithFormat:format arguments:args];

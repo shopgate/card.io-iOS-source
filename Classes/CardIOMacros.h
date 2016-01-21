@@ -12,12 +12,12 @@
 #else
 #define CardIOLog(format, args...)
 #endif
-#define CardIOLogWithLevel(level,format, args...) [CardIOLogger logWithLevel:level message:format, ## args];
-#define CardIOLogVerbose(format, args...) [CardIOLogger logWithLevel:CardIOLevelVerbose, message:format, ## args];
-#define CardIOLogDebug(format, args...) [CardIOLogger logWithLevel:CardIOLevelDebug, message:format, ## args];
-#define CardIOLogInfo(format, args...) [CardIOLogger logWithLevel:CardIOLevelInfo message:format, ## args];
-#define CardIOLogWarn(format, args...) [CardIOLogger logWithLevel:CardIOLevelWarning message:format, ## args];
-#define CardIOLogError(format, args...) [CardIOLogger logWithLevel:CardIOLevelError message:format, ## args];
+#define CardIOLogWithLevel(level,format, args...) [CardIOLogger logWithLevel:level message:format, ## args]
+#define CardIOLogVerbose(format, args...) [CardIOLogger logWithLevel:CardIOLogLevelVerbose message:format, ## args]
+#define CardIOLogDebug(format, args...) [CardIOLogger logWithLevel:CardIOLogLevelDebug message:format, ## args]
+#define CardIOLogInfo(format, args...) [CardIOLogger logWithLevel:CardIOLogLevelInfo message:format, ## args]
+#define CardIOLogWarn(format, args...) [CardIOLogger logWithLevel:CardIOLogLevelWarning message:format, ## args]
+#define CardIOLogError(format, args...) [CardIOLogger logWithLevel:CardIOLogLevelError message:format, ## args]
 
 @interface CardIOMacros : NSObject
 

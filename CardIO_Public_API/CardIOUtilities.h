@@ -6,12 +6,13 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
-typedef NS_ENUM(NSUInteger, CardIOLevel) {
-  CardIOLevelError,
-  CardIOLevelWarning,
-  CardIOLevelInfo,
-  CardIOLevelDebug,
-  CardIOLevelVerbose
+
+typedef NS_ENUM(NSUInteger, CardIOLogLevel) {
+  CardIOLogLevelError,
+  CardIOLogLevelWarning,
+  CardIOLogLevelInfo,
+  CardIOLogLevelDebug,
+  CardIOLogLevelVerbose
 };
 
 typedef void (^ LoggingBlock)(NSUInteger,NSString*);
@@ -45,7 +46,8 @@ typedef void (^ LoggingBlock)(NSUInteger,NSString*);
 + (UIImageView *)blurredScreenImageView;
 
 
-
+/// Possibility to submit the cardIO framework a logging block, this block is used instead of NSLOG.
+/// This is called with a certain log level and the message that shall be logged
 + (void)setExternalLogging:(LoggingBlock)loggingBlock;
 
 

@@ -8,6 +8,8 @@
 
 #import "CardIOOutput+Internal.h"
 #import "CardIOVideoStream.h"
+#import "CardIOUtilities.h"
+#import "CardIOMacros.h"
 
 /** Degrees to Radian **/
 #define radians( degrees ) ( ( degrees ) / 180.0 * M_PI )
@@ -42,6 +44,10 @@
 @implementation CardIOOutputCardScanner
 
 +(instancetype)outputCardScannerDoOnCardDetection:(void(^)(CardIOView *cardIOView, CardIOCreditCardInfo *detectedCardInfo))onDetectedCard{
+  if (!onDetectedCard) {
+    CardIOLogError(@"%@.%@(): %@ cannot instanciate without completionBlock: %@()!",NSStringFromClass([self class]),NSStringFromSelector(_cmd),NSStringFromClass([self class]),@"onDetectedCard");
+    return nil;
+  }
   return [[CardIOOutputCardScanner alloc] initCardScannerDoOnCardDetection:onDetectedCard];
 }
 
@@ -68,6 +74,10 @@
 @implementation CardIOOutputMetadataScanner
 
 +(instancetype)outputMetadataScannerWithTypes:(NSArray*)metadataTypes doOnMetadataDetection:(void (^)(AVCaptureOutput *, NSArray *, AVCaptureConnection *))onDetectedMetadata{
+  if (!onDetectedMetadata) {
+    CardIOLogError(@"%@.%@(): %@ cannot instanciate without completionBlock: %@()!",NSStringFromClass([self class]),NSStringFromSelector(_cmd),NSStringFromClass([self class]),@"onDetectedMetadata");
+    return nil;
+  }
   return [[CardIOOutputMetadataScanner alloc] initWithTypes:metadataTypes doOnMetadataDetection:onDetectedMetadata];
 }
 
@@ -81,6 +91,10 @@
 
 -(instancetype)initWithTypes:(NSArray*)metadataTypes doOnMetadataDetection:(void(^)(AVCaptureOutput *captureOutput, NSArray *outputMetadataObjects, AVCaptureConnection *fromConnection))onDetectedMetaData{
   if (self = [super init]) {
+    if (!metadataTypes || metadataTypes.count==0) {
+      CardIOLogDebug(@"%@.%@(): No specific metadata types given, all available metadata types will be used!", NSStringFromClass([self class]),NSStringFromSelector(_cmd));
+    }
+    
     self.metadataTypes = metadataTypes;
     self.onDetectedMetadata = onDetectedMetaData;
     return self;
@@ -113,6 +127,9 @@
 #pragma mark - VideoStreaming
 
 -(void)wasAddedByVideoStream:(CardIOVideoStream *)videoStream{
+  if (!self.metadataTypes.count) {
+    self.metadataTypes = [((AVCaptureMetadataOutput*)self.captureOutput) availableMetadataObjectTypes];
+  }
   ((AVCaptureMetadataOutput*)self.captureOutput).metadataObjectTypes = self.metadataTypes;
 }
 
@@ -132,6 +149,14 @@
 }
 
 +(instancetype)outputImageScannerWithOutputSettings:(NSDictionary*)outputSettings doOnScannedImmage:(void(^)(UIImage* scannedImage, NSDictionary *info))onScannedImage doOnError:(void(^)(NSError* error, NSDictionary *info))onError{
+  if (!onScannedImage) {
+    CardIOLogError(@"%@.%@(): %@ cannot instanciate without completionBlock: %@()!",NSStringFromClass([self class]),NSStringFromSelector(_cmd),NSStringFromClass([self class]),@"onScannedImage");
+    return nil;
+  }
+  if (!onError) {
+    CardIOLogError(@"%@.%@(): %@ cannot instanciate without errorBlock: %@()!",NSStringFromClass([self class]),NSStringFromSelector(_cmd),NSStringFromClass([self class]),@"onError");
+    return nil;
+  }
   return [[CardIOOutputImageScanner alloc] initWithOutputSettings:(NSDictionary*)outputSettings doOnScannedImmage:onScannedImage doOnError:onError];
 }
 

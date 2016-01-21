@@ -123,7 +123,7 @@
     self.guideLayerLabel.numberOfLines = 0;
     [self addSubview:self.guideLayerLabel];
 
-    [self adaptGuideLayerAnimated:NO];
+    [self adaptGuideLayerVisibilityAnimated:NO];
     
     // Shutter view for shutter-open animation
     _shutter = [[CardIOShutterView alloc] initWithFrame:CGRectZero];
@@ -178,7 +178,7 @@
 - (void)startVideoStreamSession {
   [self.videoStream startSession];
   
-  //When no card scanner is set the shutter has to be opend directly
+  //When no card scanner is set (via outputs) the shutter has to be opend directly
   if (self.config.outputs) {
     BOOL openShutterDirectly = YES;
     for (CardIOOutput *output in self.config.outputs) {
@@ -511,10 +511,15 @@
 - (void)videoStream:(CardIOVideoStream *)stream didProcessFrame:(CardIOVideoFrame *)processedFrame {
   [self.shutter setOpen:YES animated:YES duration:0.5f];
 
-  if (self.config.hiddenCardGuide) {
+  if (!self.config.cardScannerEnabled || self.config.isAutoInterupted) {
     if (self.guideLayerLabel.alpha > 0.f ){
       [UIView animateWithDuration:kLabelVisibilityAnimationDuration animations:^{self.guideLayerLabel.alpha = 0.0f;}];
     }
+    if (self.cardGuide.videoFrame) {
+      self.cardGuide.videoFrame = nil;
+      [self.delegate videoStream:stream didProcessFrame:nil];
+    }
+    return;
     
   } else {
     // Hide instructions once we start to find edges
@@ -601,8 +606,8 @@
 }
 
 
--(void)adaptGuideLayerAnimated:(BOOL)animated{
-  CGFloat newAlpha = self.config.hiddenCardGuide ? 0.f : 1.f;
+-(void)adaptGuideLayerVisibilityAnimated:(BOOL)animated{
+  CGFloat newAlpha = self.config.cardScannerEnabled ? 1.f : 0.f;
   if (animated) {
     [UIView animateWithDuration:animated ? 0.3f : 0.f delay:0 options:UIViewAnimationOptionCurveEaseInOut | UIViewAnimationOptionBeginFromCurrentState animations:^{
       self.guideLayerLabel.alpha = newAlpha;
@@ -616,8 +621,8 @@
 
 }
 
--(void)forceSessionInterruption:(BOOL)forceSessionInterruption {
-  [self.videoStream forceSessionInterruption:forceSessionInterruption];
+-(void)adaptSessionInterruption {
+  [self.videoStream adaptSessionInterruption];
 }
 
 -(void)autoInterruptOnCompletion:(void(^)(void))onCompletion{
