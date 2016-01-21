@@ -17,7 +17,6 @@
 "ok" = "확인";
 "paypal_logo" = "PayPal";
 "scan_guide" = "카드를 여기에 갖다 대세요.\n자동으로 스캔됩니다.";
-"scan_image" = "Scan Image";
 
 "cardtype_americanexpress" = "American Express";
 "cardtype_cartaaura" = "Carta Aura";
