@@ -35,8 +35,8 @@
   va_start(args, format);
   NSString * message = [[NSString alloc]initWithFormat:format arguments:args];
   va_end(args);
-  
-  [CardIOLogger sharedInstance].log(CardIOLogLevelDebug,message);
+  LoggingBlock logMessageBlock = [CardIOLogger sharedInstance].log;
+  logMessageBlock(CardIOLogLevelDebug,message);
 }
 
 +(void)logWithLevel:(CardIOLogLevel)logLevel message:(NSString *)format, ... {
@@ -44,8 +44,8 @@
   va_start(args, format);
   NSString * message = [[NSString alloc]initWithFormat:format arguments:args];
   va_end(args);
-  
-  [CardIOLogger sharedInstance].log(logLevel, message);
+  LoggingBlock logMessageBlock = [CardIOLogger sharedInstance].log;
+  logMessageBlock(logLevel, message);
 }
 
 +(void)setLoggingBlock:(LoggingBlock) loggingBlock{

@@ -8,7 +8,7 @@
 
 #import "CardIOOutput.h"
 
-#import "CardIOVideoStream.h"
+@class CardIOVideoStream;
 
 
 @protocol CARDIOOutputVideoStreaming <NSObject>
@@ -23,6 +23,7 @@
 }
 @property (nonatomic, weak) CardIOVideoStream * videoStream;
 @property (nonatomic, strong, readonly) AVCaptureOutput * captureOutput;
+@property (nonatomic, assign) UIInterfaceOrientation currentInterfaceOrientation;
 @end
 
 

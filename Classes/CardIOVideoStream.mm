@@ -191,7 +191,7 @@
     _captureSession = [[AVCaptureSession alloc] init];
     _camera = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
     _previewLayer = [AVCaptureVideoPreviewLayer layerWithSession:self.captureSession];
-    dmz = dmz_context_create();
+    dmz = dmz_context_create(); //TODO: context only if cardScanner;
 #elif SIMULATE_CAMERA
     _previewLayer = [SimulatedCameraLayer layer];
 #endif
@@ -299,6 +299,11 @@
   if (newInterfaceOrientation != self.interfaceOrientation) {
     self.interfaceOrientation = newInterfaceOrientation;
     
+    if (self.config.outputs) {
+      for (CardIOOutput *output in self.config.outputs){
+        output.currentInterfaceOrientation = self.interfaceOrientation;
+      }
+    }
 #if SIMULATE_CAMERA
     [(SimulatedCameraLayer *)self.previewLayer updateOrientation];
     [self captureOutput:nil didOutputSampleBuffer:nil fromConnection:nil];
@@ -498,6 +503,7 @@
   else {
     [session addOutput:output.captureOutput];
     output.videoStream = self;
+    output.currentInterfaceOrientation = self.interfaceOrientation;
     if ([output respondsToSelector:@selector(wasAddedByVideoStream:)]) {
       [output wasAddedByVideoStream:self];
     }
@@ -518,6 +524,8 @@
   [self.videoOutput setSampleBufferDelegate:self queue:queue];
   
   [session addOutput:self.videoOutput];
+  
+  [self.config setCardScannerEnabled:YES];
 }
 
 //removeOutput is for adding outputs seperatedly after CardIOView is already instanciated
@@ -546,6 +554,7 @@
   [self.videoOutput setSampleBufferDelegate:nil queue:NULL];
   [session removeOutput:self.videoOutput];
   self.videoOutput = nil;
+  [self.config setCardScannerEnabled:NO];
 }
 
 - (void)startSession {
@@ -554,12 +563,29 @@
     [self.camera addObserver:self forKeyPath:@"adjustingFocus" options:(NSKeyValueObservingOptionNew | NSKeyValueObservingOptionInitial) context:nil];
     [self.camera addObserver:self forKeyPath:@"adjustingExposure" options:(NSKeyValueObservingOptionNew | NSKeyValueObservingOptionInitial) context:nil];
     
+    self.running = YES;
     [self continueSessionIfPossible];
-
+    
+    
+    
+    //TODO: Shopgate: maybe find good settings which work for all outputs
     [self changeCameraConfiguration:^{
-      if ([self.camera respondsToSelector:@selector(isAutoFocusRangeRestrictionSupported)]) {
-        if(self.camera.autoFocusRangeRestrictionSupported) {
-          self.camera.autoFocusRangeRestriction = AVCaptureAutoFocusRangeRestrictionNear;
+      BOOL nearFocus = NO;
+      if (!self.config.outputs) {
+        nearFocus = YES;
+      } else {
+        for (CardIOOutput *output in self.config.outputs) {
+          if ([[output class] isSubclassOfClass:[CardIOOutputCardScanner class]]) {
+            nearFocus = YES;
+          }
+        }
+      }
+      
+      if (nearFocus) {
+        if ([self.camera respondsToSelector:@selector(isAutoFocusRangeRestrictionSupported)]) {
+          if(self.camera.autoFocusRangeRestrictionSupported) {
+            self.camera.autoFocusRangeRestriction = AVCaptureAutoFocusRangeRestrictionNear;
+          }
         }
       }
       if ([self.camera respondsToSelector:@selector(isFocusPointOfInterestSupported)]) {
@@ -568,11 +594,10 @@
         }
       }
     }
- #if CARDIO_DEBUG
+#if CARDIO_DEBUG
                    withErrorMessage:@"CardIO couldn't lock for configuration within startSession"
- #endif
+#endif
      ];
-    self.running = YES;
   }
 #elif SIMULATE_CAMERA
   self.simulatedCameraTimer = [NSTimer scheduledTimerWithTimeInterval:2 target:self selector:@selector(simulateNewFrame) userInfo:nil repeats:YES];
@@ -611,6 +636,9 @@
 #endif
 
     self.running = NO;
+    _completionBlocksAfterAutoInterruption=nil;
+    _isAutoInterrupted=NO;
+    self.config.forceSessionInterruption = NO;
     
     dispatch_semaphore_signal(self.cameraConfigurationSemaphore);
   }
@@ -656,12 +684,8 @@
   if (!wasAutoInterrupted) {
     __block CardIOVideoStream *block_self = self;
     
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)((self.config.scannedImageDuration + 1) * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)((self.config.scannedImageDuration + 2) * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
       if (block_self.running && block_self.isAutoInterrupted) {
-        self.scanner = [[CardIOCardScanner alloc] init];
-        for (void (^completionBlock)(void) in self.completionBlocksAfterAutoInterruption) {
-          completionBlock();
-        }
         block_self.isAutoInterrupted = NO;
       }
     });
@@ -670,8 +694,16 @@
 
 
 -(void)setIsAutoInterrupted:(BOOL)isAutoInterrupted {
+  BOOL wasAutoInterrupted = _isAutoInterrupted;
+  
   if (isAutoInterrupted != _isAutoInterrupted) {
-    if (_isAutoInterrupted) {
+    _isAutoInterrupted = isAutoInterrupted;
+    
+    if (wasAutoInterrupted) {
+      self.scanner = [[CardIOCardScanner alloc] init];
+      for (void (^completionBlock)(void) in self.completionBlocksAfterAutoInterruption) {
+        completionBlock();
+      }
       self.completionBlocksAfterAutoInterruption = nil;
       if (self.running && !self.config.forceSessionInterruption) {
         [self.delegate videoStream:self didProcessFrame:nil];
@@ -682,7 +714,7 @@
       self.completionBlocksAfterAutoInterruption = [NSMutableArray arrayWithCapacity:2];
       [self.captureSession stopRunning];
     }
-    _isAutoInterrupted = isAutoInterrupted;
+    
     [self.config setIsAutoInterupted:isAutoInterrupted];
   }
 }
@@ -801,7 +833,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
       UIGraphicsEndImageContext();
   #endif
 #endif
-
+      
       [self performSelectorOnMainThread:@selector(sendFrameToDelegate:) withObject:frame waitUntilDone:NO];
       
       // Autofocus

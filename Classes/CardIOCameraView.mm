@@ -33,6 +33,55 @@
 #define kStandardInstructionsFontSize 18.0f
 #define kMinimumInstructionsFontSize (kStandardInstructionsFontSize / 2)
 
+
+
+@interface CardIOCardGuideInformation : NSObject
+
+@property (nonatomic, assign) CGRect guideFrame;
+@property (nonatomic, assign) BOOL foundTop;
+@property (nonatomic, assign) BOOL foundLeft;
+@property (nonatomic, assign) BOOL foundBottom;
+@property (nonatomic, assign) BOOL foundRight;
+@property (nonatomic, assign) BOOL isRotating;
+@property (nonatomic, assign) BOOL hasDetectedCard;
+@property (nonatomic, assign) BOOL recommendedShowingInstructions;
+
+-(instancetype)initWithFrame:(CGRect)guideFrame foundTopEdge:(BOOL)foundTop foundLeftEdge:(BOOL)foundLeft foundBottomEdge:(BOOL)foundBottom foundRightEgde:(BOOL)foundRight isRotating:(BOOL)isRotating detectedCard:(BOOL)detectedCard recommendedShowingInstructions:(BOOL)recommendedShowingInstructions;
+-(BOOL)isEqualToInformation:(CardIOCardGuideInformation*)information;
+@end
+@implementation CardIOCardGuideInformation
+-(BOOL)isEqualToInformation:(CardIOCardGuideInformation *)information{
+  if (information && information.foundTop==self.foundTop && information.foundLeft==self.foundLeft && information.foundBottom==self.foundBottom && information.foundRight==self.foundRight && information.isRotating==self.isRotating && information.hasDetectedCard==self.hasDetectedCard && information.recommendedShowingInstructions==self.recommendedShowingInstructions && CGRectEqualToRect(information.guideFrame, self.guideFrame)) {
+    return YES;
+  }
+  return NO;
+}
+- (BOOL)isEqual:(id)other
+{
+  if (other == self) {
+    return YES;
+  } else if ([other isKindOfClass:[CardIOCardGuideInformation class]] ) {
+    return [self isEqualToInformation:other];
+  } else {
+    return NO;
+  }
+}
+-(instancetype)initWithFrame:(CGRect)guideFrame foundTopEdge:(BOOL)foundTop foundLeftEdge:(BOOL)foundLeft foundBottomEdge:(BOOL)foundBottom foundRightEgde:(BOOL)foundRight isRotating:(BOOL)isRotating detectedCard:(BOOL)detectedCard recommendedShowingInstructions:(BOOL)recommendedShowingInstructions{
+  if (self = [super init]) {
+    self.guideFrame = guideFrame;
+    self.foundTop = foundTop;
+    self.foundLeft = foundLeft;
+    self.foundBottom = foundRight;
+    self.isRotating = isRotating;
+    self.hasDetectedCard = detectedCard;
+    self.recommendedShowingInstructions = recommendedShowingInstructions;
+  }
+  return self;
+}
+@end
+
+
+
 @interface CardIOCameraView ()
 
 @property(nonatomic, strong, readonly) CardIOGuideLayer *cardGuide;
@@ -46,10 +95,14 @@
 @property(nonatomic, assign, readwrite) BOOL videoStreamSessionWasRunningBeforeRotation;
 @property(nonatomic, strong, readwrite) CardIOConfig *config;
 @property(nonatomic, assign, readwrite) BOOL hasLaidoutCameraButtons;
+@property(nonatomic, strong, readwrite) CardIOCardGuideInformation* lastSendCardGuideInformation;
 
 #if CARDIO_DEBUG
 @property(nonatomic, strong, readwrite) UITextField *debugTextField;
 #endif
+
+//for external card guide
+@property (nonatomic, assign, readwrite) BOOL isExternalRecommendedShowingInstructions;
 
 @end
 
@@ -73,7 +126,7 @@
   return nil;
 }
 
-- (id)initWithFrame:(CGRect)frame delegate:(id<CardIOVideoStreamDelegate>)delegate config:(CardIOConfig *)config {
+- (id)initWithFrame:(CGRect)frame delegate:(id<CardIOVideoStreamDelegate,CardIOCameraViewDelegate>)delegate config:(CardIOConfig *)config {
   self = [super initWithFrame:frame];
   if(self) {
     _deviceOrientation = UIDeviceOrientationUnknown;
@@ -223,8 +276,12 @@
 }
 
 - (CGRect)cameraPreviewFrame {
-  CGRect cameraPreviewFrame = [[self class] previewRectWithinSize:self.bounds.size
-                                                        landscape:UIInterfaceOrientationIsLandscape([UIApplication sharedApplication].statusBarOrientation)];
+  if (!self.config.forcedSessionPreset) {
+    CGRect cameraPreviewFrame = [[self class] previewRectWithinSize:self.bounds.size
+                                                          landscape:UIInterfaceOrientationIsLandscape([UIApplication sharedApplication].statusBarOrientation)];
+    return cameraPreviewFrame;
+  }
+  CGRect cameraPreviewFrame = self.bounds;
   return cameraPreviewFrame;
 }
 
@@ -241,7 +298,8 @@
 
     [self layoutCameraButtons];
 
-    self.cardGuide.frame = cameraPreviewFrame;
+    self.cardGuide.frame = [[self class] previewRectWithinSize:self.bounds.size
+                                                     landscape:UIInterfaceOrientationIsLandscape([UIApplication sharedApplication].statusBarOrientation)];
   });
 }
 
@@ -255,9 +313,9 @@
   }
 }
 
--(void)torchIsForcedToBeOn:(BOOL)torchIsForcedToBeOn{
+-(void)adaptToForcedTorch {
   BOOL torchWasOn = [self.videoStream torchIsOn];
-  if (torchWasOn != torchIsForcedToBeOn) {
+  if (torchWasOn != self.config.forceTorchToBeOn) {
     BOOL success = [self.videoStream setTorchOn:!torchWasOn];
     if (success) {
       [self updateLightButtonState];
@@ -506,10 +564,33 @@
   [self orientGuideLayerLabel];
 }
 
+- (void)guidelayerDidSetCardGuideInformation:(CGRect)internalGuideFrame foundTopEdge:(BOOL)foundTop foundLeftEdge:(BOOL)foundLeft foundBottomEdge:(BOOL)foundBottom foundRightEgde:(BOOL)foundRight isRotating:(BOOL)isRotating detectedCard:(BOOL)detectedCard {
+  
+  internalGuideFrame = CGRectMake(self.cardGuide.frame.origin.x+internalGuideFrame.origin.x, self.cardGuide.frame.origin.y+internalGuideFrame.origin.y, internalGuideFrame.size.width, internalGuideFrame.size.height);
+  
+  CardIOCardGuideInformation * newInformation = [[CardIOCardGuideInformation alloc] initWithFrame:internalGuideFrame foundTopEdge:foundTop foundLeftEdge:foundLeft foundBottomEdge:foundBottom foundRightEgde:foundRight isRotating:isRotating detectedCard:detectedCard recommendedShowingInstructions:self.isExternalRecommendedShowingInstructions];
+  
+  if (self.lastSendCardGuideInformation && newInformation && [newInformation isEqualToInformation:self.lastSendCardGuideInformation] ) {
+    //We don't need to send information, since they are still the same
+    return;
+  }
+  
+  if (newInformation) {
+    self.lastSendCardGuideInformation = newInformation;
+  }
+  
+  [self.delegate guidelayerDidSetCardGuideInformation:internalGuideFrame foundTopEdge:foundTop foundLeftEdge:foundLeft foundBottomEdge:foundBottom foundRightEgde:foundRight isRotating:isRotating detectedCard:detectedCard recommendedShowingInstructions:self.isExternalRecommendedShowingInstructions];
+}
+
+
 #pragma mark - CardIOVideoStreamDelegate methods
 
 - (void)videoStream:(CardIOVideoStream *)stream didProcessFrame:(CardIOVideoFrame *)processedFrame {
   [self.shutter setOpen:YES animated:YES duration:0.5f];
+  
+  if (self.cardGuide.isEnabledExternalCardInformation != (self.config.externalCardGuideInformation!=nil)) {
+    self.cardGuide.isEnabledExternalCardInformation=!self.cardGuide.isEnabledExternalCardInformation;
+  }
 
   if (!self.config.cardScannerEnabled || self.config.isAutoInterupted) {
     if (self.guideLayerLabel.alpha > 0.f ){
@@ -524,9 +605,18 @@
   } else {
     // Hide instructions once we start to find edges
     if (processedFrame.numEdgesFound < 0.05f) {
-      [UIView animateWithDuration:kLabelVisibilityAnimationDuration animations:^{self.guideLayerLabel.alpha = 1.0f;}];
+      if (self.cardGuide.isEnabledExternalCardInformation) {
+        self.isExternalRecommendedShowingInstructions = YES;
+      } else {
+        [UIView animateWithDuration:kLabelVisibilityAnimationDuration animations:^{self.guideLayerLabel.alpha = 1.0f;}];
+      }
+      
     } else if (processedFrame.numEdgesFound > 2.1f) {
-      [UIView animateWithDuration:kLabelVisibilityAnimationDuration animations:^{self.guideLayerLabel.alpha = 0.0f;}];
+      if (self.cardGuide.isEnabledExternalCardInformation) {
+        self.isExternalRecommendedShowingInstructions = NO;
+      } else {
+        [UIView animateWithDuration:kLabelVisibilityAnimationDuration animations:^{self.guideLayerLabel.alpha = 0.0f;}];
+      }
     }
   }
   
@@ -555,6 +645,9 @@
 
 - (UIInterfaceOrientationMask)supportedOverlayOrientationsMask {
   UIInterfaceOrientationMask supportedOverlayOrientationsMask = UIInterfaceOrientationMaskAll;
+  if (self.config.allowedInterfaceOrientationMask > 0) {
+    return self.config.allowedInterfaceOrientationMask;
+  }
   CardIOPaymentViewController *vc = [CardIOPaymentViewController cardIOPaymentViewControllerForResponder:[self nextResponder]];
   if (vc) {
     supportedOverlayOrientationsMask = [vc supportedOverlayOrientationsMask];
@@ -607,16 +700,17 @@
 
 
 -(void)adaptGuideLayerVisibilityAnimated:(BOOL)animated{
-  CGFloat newAlpha = self.config.cardScannerEnabled ? 1.f : 0.f;
+  CGFloat newAlpha = ( self.config.cardScannerEnabled && !self.config.externalCardGuideInformation ) ? 1.f : 0.f;
+
   if (animated) {
     [UIView animateWithDuration:animated ? 0.3f : 0.f delay:0 options:UIViewAnimationOptionCurveEaseInOut | UIViewAnimationOptionBeginFromCurrentState animations:^{
       self.guideLayerLabel.alpha = newAlpha;
-      self.cardGuide.opacity = newAlpha;
+      self.cardGuide.opacity = (float)newAlpha;
     } completion:^(BOOL finished) {
     }];
   } else {
     self.guideLayerLabel.alpha = newAlpha;
-    self.cardGuide.opacity = newAlpha;
+    self.cardGuide.opacity = (float)newAlpha;
   }
 
 }
@@ -629,16 +723,19 @@
   [self.videoStream autoInterruptOnCompletion:onCompletion];
 }
 
+
 #pragma mark - outputs
 
 -(void)addOutput:(CardIOOutput *)output {
   //since videostream is instanciated directly at cameraView init, the add can directly given to video stream
   [self.videoStream addOutput:output];
+  [self adaptGuideLayerVisibilityAnimated:YES];
 }
 
 -(void)removeOutput:(CardIOOutput *)output {
   //since videostream is instanciated directly at cameraView init, the add can directly given to video stream
   [self.videoStream removeOutput:output];
+  [self adaptGuideLayerVisibilityAnimated:YES];
 }
 
 @end

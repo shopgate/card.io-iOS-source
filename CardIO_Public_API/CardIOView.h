@@ -8,6 +8,9 @@
 #import "CardIODetectionMode.h"
 @class CardIOOutput;
 
+
+typedef void (^ CardGuideInformation)(CGRect guideFrame, BOOL topEdgeRecognized, BOOL leftEdgeRecognized, BOOL  bottomEdgeRecognized, BOOL rightEdgeRecognized, BOOL isRotating, BOOL detectedCard, BOOL recommendedShowingInstructions);
+
 /// CardIOView is one of two main entry points into the card.io SDK.
 /// @see CardIOPaymentViewController
 @interface CardIOView : UIView
@@ -69,6 +72,8 @@
 ///   the UISupportedInterfaceOrientations settings in your app's plist.
 /// Set to NO to follow standard iOS constraints. Defaults to YES. (Does not affect the manual entry screen.)
 @property(nonatomic, assign, readwrite) BOOL allowFreelyRotatingCardGuide;
+
+@property (nonatomic, assign, readwrite) UIInterfaceOrientationMask allowedInterfaceOrientationMask;
 
 /// Set the scan instruction text. If nil, use the default text. Defaults to nil.
 /// Use newlines as desired to control the wrapping of text onto multiple lines.
@@ -139,6 +144,7 @@
 /// interrupt to delay this time, using the forceSessionInterruption property.
 @property (nonatomic, assign, readwrite) BOOL autoSessionStop;
 
+@property (nonatomic, copy, readwrite) CardGuideInformation externalCardGuideInformation;
 
 /// After the scanner was initialzed for using CardIOOutputs, other CardIOOutputs can be be add by using this method.
 -(void)addOutput:(CardIOOutput*)output;

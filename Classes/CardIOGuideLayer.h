@@ -10,7 +10,9 @@
 #define kDefaultGuideColor [UIColor colorWithRed:0.0f green:1.0f blue:0.0f alpha:1.0f]
 
 @protocol CardIOGuideLayerDelegate <NSObject>
+@required
 - (void)guideLayerDidLayout:(CGRect)internalGuideFrame;
+- (void)guidelayerDidSetCardGuideInformation:(CGRect)internalGuideFrame foundTopEdge:(BOOL)foundTop foundLeftEdge:(BOOL)foundLeft foundBottomEdge:(BOOL)foundBottom foundRightEgde:(BOOL)foundRight isRotating:(BOOL)isRotating detectedCard:(BOOL)detectedCard;
 @end
 
 /**
@@ -38,6 +40,7 @@
 @property(nonatomic, assign, readwrite) UIDeviceOrientation deviceOrientation;
 @property(nonatomic, strong, readwrite) CAGradientLayer *fauxCardLayer;
 
+@property(nonatomic, assign, readwrite) BOOL isEnabledExternalCardInformation;
 @end
 
 #endif

@@ -7,9 +7,10 @@
 //
 
 #import "CardIOOutput+Internal.h"
-#import "CardIOVideoStream.h"
 #import "CardIOUtilities.h"
 #import "CardIOMacros.h"
+#import "CardIOLogger.h"
+#import "CardIOVideoStream.h"
 
 /** Degrees to Radian **/
 #define radians( degrees ) ( ( degrees ) / 180.0 * M_PI )
@@ -31,7 +32,7 @@
 
 -(AVCaptureOutput *)captureOutput{
   //has to be overridden
-#ifdef DEBUG
+#ifdef CARDIO_DEBUG
   [CardIOOutputMethodNotOverriddenException raise:@"CardIOOutputMethodNotOverriddenException" format:@"CardIOOutput: <%@> does not override captureOutput()",[self class]];
 #endif
   return nil;
@@ -121,7 +122,9 @@
 #pragma mark - MetadataObjectsDelegate
 
 -(void)captureOutput:(AVCaptureOutput *)captureOutput didOutputMetadataObjects:(NSArray *)metadataObjects fromConnection:(AVCaptureConnection *)connection {
-  self.onDetectedMetadata(captureOutput,metadataObjects,connection);
+  dispatch_async(dispatch_get_main_queue(), ^{
+    self.onDetectedMetadata(captureOutput,metadataObjects,connection);
+  });
 }
 
 #pragma mark - VideoStreaming
@@ -211,7 +214,7 @@
       }
       
       CGFloat rotationDegrees = 0;
-      switch (self.videoStream.interfaceOrientation) {
+      switch (self.currentInterfaceOrientation) {
         case UIInterfaceOrientationUnknown:
           rotationDegrees = 90;
           break;
@@ -287,9 +290,30 @@
   CGSizeMake(  (NSInteger)(width/(height/resizeMaxHeight)), resizeMaxHeight)
   : CGSizeMake(resizeMaxWidth, (NSInteger)(height/(width/resizeMaxWidth))   );
   
+
   
-  CGContextRef resizedImageRef = [self makeContextOfSize:resizeSize];
-  CGContextRetain(resizedImageRef);
+  //context for resized image
+  size_t zIntBitmapBytesPerRow  = (size_t)(resizeSize.width * 4); // rgb alpha
+  size_t zIntBitmapTotalBytes  = (size_t)(zIntBitmapBytesPerRow * resizeSize.height);
+  
+  void * ptrToBitmap = malloc(zIntBitmapTotalBytes);
+  if (ptrToBitmap == NULL) {
+    NSLog(@"makeContext error on malloc");
+    exit(1);
+  } // end if
+  
+  CGColorSpaceRef colorSpaceRef = CGColorSpaceCreateDeviceRGB();
+  CGContextRef resizedImageRef = CGBitmapContextCreate(
+                                                         ptrToBitmap,
+                                                         (size_t)resizeSize.width,
+                                                         (size_t)resizeSize.height,
+                                                         8,
+                                                         zIntBitmapBytesPerRow,
+                                                         colorSpaceRef,
+                                                         kCGImageAlphaNoneSkipFirst
+                                                         );
+  
+  //CGContextRetain(resizedImageRef);
   CGRect rectResizedImage = CGRectMake(0.0,0.0,resizeSize.width,resizeSize.height);
   
   // Create a Quartz image from the pixel data in the bitmap graphics context
@@ -301,48 +325,24 @@
   
   
   CGContextDrawImage (resizedImageRef,rectResizedImage,quartzImage);
-  CGImageRef Test = CGBitmapContextCreateImage(resizedImageRef);
+  CGImageRef imageRef = CGBitmapContextCreateImage(resizedImageRef);
   
   
-  UIImage * ouputImage = [self imageRotatedFrom:[UIImage imageWithCGImage:Test] byDegrees:rotation];
+  UIImage * ouputImage = [self imageRotatedFrom:[UIImage imageWithCGImage:imageRef] byDegrees:rotation];
   
   // Unlock the pixel buffer
   CVPixelBufferUnlockBaseAddress(imageBuffer,0);
   
   
   // final memory management
+  CGColorSpaceRelease(colorSpaceRef);
   CGContextRelease(resizedImageRef);
   CGImageRelease(quartzImage);
-  CGImageRelease(Test);
+  CGImageRelease(imageRef);
   
   return (ouputImage);
 }
 
--(CGContextRef)makeContextOfSize:(CGSize)pSize {
-  
-  size_t zIntBitmapBytesPerRow  = (size_t)(pSize.width * 4); // rgb alpha
-  size_t zIntBitmapTotalBytes  = (size_t)(zIntBitmapBytesPerRow * pSize.height);
-  
-  void * ptrToBitmap = malloc(zIntBitmapTotalBytes);
-  if (ptrToBitmap == NULL) {
-    NSLog(@"makeContext error on malloc");
-    exit(1);
-  } // end if
-  
-  CGContextRef zBitmapContextRef = CGBitmapContextCreate(
-                                                         ptrToBitmap,
-                                                         (size_t)pSize.width,
-                                                         (size_t)pSize.height,
-                                                         8,
-                                                         zIntBitmapBytesPerRow,
-                                                         CGColorSpaceCreateDeviceRGB(),
-                                                         kCGImageAlphaNoneSkipFirst
-                                                         );
-
-  CFAutorelease(zBitmapContextRef);
-  
-  return zBitmapContextRef;
-}
 
 - (UIImage *)imageRotatedFrom:(UIImage*)image byDegrees:(CGFloat)degrees{
   // calculate the size of the rotated view's containing box for our drawing space

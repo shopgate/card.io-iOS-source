@@ -35,6 +35,9 @@
 #import "CardIOOrientation.h"
 #import <stdint.h>
 
+#import "CardIOOutput.h"
+#import "CardIOUtilities.h"
+
 #pragma mark - Other constants
 
 #define kStatusBarHeight      20
@@ -55,10 +58,17 @@
 @property(nonatomic, assign, readwrite) BOOL                statusBarWasOriginallyHidden;
 @property(nonatomic, strong, readwrite) UIButton           *cancelButton;
 @property(nonatomic, strong, readwrite) UIButton           *manualEntryButton;
+@property(nonatomic, strong, readwrite) UIButton           *scanImageButton;
 @property(nonatomic, assign, readwrite) UIDeviceOrientation deviceOrientation;
 @property(nonatomic, assign, readwrite) CGSize              cancelButtonFrameSize;
 @property(nonatomic, assign, readwrite) CGSize              manualEntryButtonFrameSize;
 
+@property(nonatomic, strong) AVCaptureSession * testSession;
+@property(nonatomic, strong) AVCaptureDevice *_device;
+@property(nonatomic, strong) AVCaptureDeviceInput *_input;
+@property(nonatomic, strong) CardIOOutputMetadataScanner *_barcodeOutPut;
+@property(nonatomic, strong) CardIOOutputImageScanner *_imageScanner;
+@property(nonatomic, strong) UIView * guide;
 @end
 
 #pragma mark -
@@ -77,8 +87,14 @@
     }
     _statusBarWasOriginallyHidden = [UIApplication sharedApplication].statusBarHidden;
   }
+  [CardIOUtilities setExternalLogging:^(NSUInteger loglevel,NSString *message) {
+    NSLog(@"[CARDIO]: %@",message);
+  }];
   return self;
 }
+
+
+
 
 
 #pragma mark - View Load/Unload sequence
@@ -88,26 +104,115 @@
   self.view.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
 
   self.view.backgroundColor = [UIColor colorWithWhite:0.15f alpha:1.0f];
+  
+//  AVCaptureSession * session;
+//  session = [[AVCaptureSession alloc] init];
+//  self.testSession = session;
+//  
+//  AVCaptureVideoPreviewLayer *prevLayer = [AVCaptureVideoPreviewLayer layerWithSession:session];
+//  prevLayer.frame = self.view.bounds;
+//  prevLayer.videoGravity = AVLayerVideoGravityResizeAspectFill;
+//  
+//  [self.view.layer addSublayer:prevLayer];
+  
+  NSMutableDictionary* barCodeTypes;
+  
+  barCodeTypes = @{
+                   @"org.gs1.UPC-E" : @"UPC_E",
+                   @"org.iso.Code39" : @"CODE_39",
+                   @"org.gs1.EAN-13" : @"EAN_13",
+                   @"org.gs1.EAN-8" : @"EAN_8",
+                   @"com.intermec.Code93" : @"CODE_93",
+                   @"org.iso.Code128" : @"CODE_128",
+                   @"org.iso.PDF417" : @"PDF_417",
+                   @"org.iso.QRCode" : @"QR_CODE",
+                   @"org.iso.Aztec" : @"AZTEC"
+                   };
+  
+  barCodeTypes = [barCodeTypes mutableCopy];
+  [((NSMutableDictionary*)barCodeTypes) addEntriesFromDictionary:@{
+                                                                   @"org.ansi.Interleaved2of5" : @"ITF",
+                                                                   @"org.iso.DataMatrix" : @"DATA_MATRIX"
+                                                                   }];
+  
+  
+  
 
   CGRect cardIOViewFrame = CGRectMake(0, 0, self.view.bounds.size.width, self.view.bounds.size.height);
   cardIOViewFrame = CGRectRoundedToNearestPixel(cardIOViewFrame);
-  self.cardIOView = [[CardIOView alloc] initWithFrame:cardIOViewFrame];
+  
+  
+  CardIOOutputImageScanner * imageOutput = [CardIOOutputImageScanner
+                                            outputImageScannerWithOutputSettings:[NSDictionary dictionaryWithObject:
+                                                                                                           [NSNumber numberWithInt:kCVPixelFormatType_32BGRA]
+                                                                                                                                      forKey:(id)kCVPixelBufferPixelFormatTypeKey]
+                                            doOnScannedImmage:^(UIImage *scannedImage, NSDictionary *info) {
+                                              int test = 0;
+                                              //TODO
+                                            } doOnError:^(NSError *error, NSDictionary *info) {
+                                            }];
+  self._imageScanner = imageOutput;
+  
+  CardIOOutputMetadataScanner * barcodeOutout = [CardIOOutputMetadataScanner outputMetadataScannerWithTypes:[barCodeTypes allKeys] doOnMetadataDetection:^(AVCaptureOutput *captureOutput, NSArray *outputMetadataObjects, AVCaptureConnection *fromConnection) {
+    for (AVMetadataObject *metadataObject in outputMetadataObjects) {
+      
+      NSString *codeType = [barCodeTypes objectForKey:metadataObject.type];
+      
+      if(codeType) {
+        NSString *detectionString = [(AVMetadataMachineReadableCodeObject *)metadataObject stringValue];
+        
+        NSLog(@"Scan: %@",detectionString);
+        break;
+      }
+    }
+  }];
+  self._barcodeOutPut = barcodeOutout;
+  
+  
+  CardIOOutputCardScanner * cardScannerOutput = [CardIOOutputCardScanner
+                                           outputCardScannerDoOnCardDetection:^(CardIOView *cardIOView, CardIOCreditCardInfo *detectedCardInfo) {
+                                             [self cardIOView:cardIOView didScanCard:detectedCardInfo];
+                                           }];
+  
+  
 
-  self.cardIOView.delegate = self;
+  self.cardIOView = [[CardIOView alloc] initWithFrame:cardIOViewFrame outputs:@[barcodeOutout,imageOutput/*,cardScannerOutput*/] captureSessionPreset:AVCaptureSessionPresetInputPriority];
+
+  //self.cardIOView = [[CardIOView alloc] initWithFrame:cardIOViewFrame];
+  //self.cardIOView.delegate = self;
+  
   self.cardIOView.languageOrLocale = self.context.languageOrLocale;
   self.cardIOView.useCardIOLogo = self.context.useCardIOLogo;
-  self.cardIOView.hideCardIOLogo = self.context.hideCardIOLogo;
-  self.cardIOView.guideColor = self.context.guideColor;
-  self.cardIOView.scannedImageDuration = self.context.scannedImageDuration;
-  self.cardIOView.allowFreelyRotatingCardGuide = self.context.allowFreelyRotatingCardGuide;
-
-  self.cardIOView.scanInstructions = self.context.scanInstructions;
+  self.cardIOView.hideCardIOLogo = YES;
+  self.cardIOView.guideColor = nil; //TODO, does not work
+  self.cardIOView.scannedImageDuration = 0;
+  self.cardIOView.allowFreelyRotatingCardGuide = NO;
+  self.cardIOView.allowedInterfaceOrientationMask = UIInterfaceOrientationPortrait;
+  self.cardIOView.scanInstructions = @"FOO";//self.context.scanInstructions; todo
   self.cardIOView.scanExpiry = self.context.collectExpiry && self.context.scanExpiry;
-  self.cardIOView.scanOverlayView = self.context.scanOverlayView;
+  
 
   self.cardIOView.detectionMode = self.context.detectionMode;
 
+  self.guide = [[UIView alloc] initWithFrame:self.view.bounds];
+  self.guide.alpha = 1.f;
+  self.guide.backgroundColor = [UIColor colorWithRed:0.5 green:0 blue:0 alpha:0.3f];
+  self.guide.tintColor = [UIColor colorWithRed:0.5 green:0 blue:0 alpha:0.3f];
+  /*self.cardIOView.externalCardGuideInformation = ^void (CGRect guideFrame, BOOL topEdgeRecognized, BOOL leftEdgeRecognized, BOOL  bottomEdgeRecognized, BOOL rightEdgeRecognized, BOOL isRotating, BOOL detectedCard, BOOL recommendedShowingInstructions) {
+    //debug joe
+#ifdef DEBUG
+    //TODO: joe
+    self.guide.frame = guideFrame;
+    NSLog(@"%@",@"EXTERNAL GUIDE FRAME");
+    int test = 0;
+#endif
+    //debug end
+    };*/
+
+  
+  
   [self.view addSubview:self.cardIOView];
+  [self.view addSubview:self.guide];
 
   _cancelButton = [self makeButtonWithTitle:CardIOLocalizedString(@"cancel", self.context.languageOrLocale) // Cancel
                                withSelector:@selector(cancel:)];
@@ -120,15 +225,66 @@
     _manualEntryButtonFrameSize = self.manualEntryButton.frame.size;
     [self.view addSubview:self.manualEntryButton];
   }
+  
+  _scanImageButton = [self makeButtonWithTitle:@"Scan Image" withSelector:@selector(scanImage:)];
+  //TODO: NSbundle has to be extended with this string
+  [self.view addSubview:self.scanImageButton];
 
-  // Add shadow to camera preview
+  
+   //Add shadow to camera preview
   _shadowLayer = [CALayer layer];
   self.shadowLayer.shadowRadius = kDropShadowRadius;
   self.shadowLayer.shadowColor = [UIColor blackColor].CGColor;
   self.shadowLayer.shadowOffset = CGSizeMake(0.0f, 0.0f);
   self.shadowLayer.shadowOpacity = 0.5f;
   self.shadowLayer.masksToBounds = NO;
-  [self.cardIOView.layer insertSublayer:self.shadowLayer atIndex:0]; // must go *behind* everything
+  [self.cardIOView.layer insertSublayer:self.shadowLayer atIndex:0]; // must go *behind* everything original
+  
+
+  
+  self.cardIOView.forceTorchToBeOn = NO;
+  //[self.cardIOView setHiddenCardGuide:YES animated:YES];
+  //[self performSelector:@selector(testInterruption) withObject:nil afterDelay:5];
+  self.cardIOView.autoSessionStop = NO;
+  //[self performSelector:@selector(testDisable) withObject:nil afterDelay:5];
+  [self performSelector:@selector(addCardScanner:) withObject:cardScannerOutput afterDelay:7];
+}
+
+
+-(void)addCardScanner:(CardIOOutputCardScanner*)cardScanner {
+  [self.cardIOView addOutput:cardScanner];
+  //[self performSelector:@selector(stopTestTorch) withObject:nil afterDelay:30];
+}
+
+-(void)testTorch {
+  [self.cardIOView setForceTorchToBeOn:YES];
+  [self performSelector:@selector(stopTestTorch) withObject:nil afterDelay:30];
+}
+
+-(void)stopTestTorch{
+  [self.cardIOView setForceTorchToBeOn:NO];
+}
+
+-(void)testInterruption {
+  [self.cardIOView setForceSessionInterruption:YES];
+  [self performSelector:@selector(stopTestInterruption) withObject:nil afterDelay:5];
+}
+
+-(void)stopTestInterruption{
+  [self.cardIOView setForceSessionInterruption:NO];
+}
+
+-(void)testDisable{
+  [self.cardIOView setCardScannerEnabled:NO animated:YES];
+  [self performSelector:@selector(stopTestDisable) withObject:nil afterDelay:40];
+}
+
+-(void)stopTestDisable{
+  [self.cardIOView setCardScannerEnabled:YES animated:YES];
+}
+
+-(void)scanImage:(UIButton*)scanImageButton {
+  [self._imageScanner scanImageWithMaxWidth:@2048 maxHeight:@2048 info:@{@"requestID" : @"fooBar"}];
 }
 
 - (void)viewWillLayoutSubviews {
@@ -335,6 +491,13 @@
                                                        CGRectGetMaxY(cameraPreviewFrame) - self.manualEntryButtonFrameSize.height - 5.0f,
                                                        self.manualEntryButtonFrameSize);
   }
+  
+  if (self.scanImageButton){
+    self.scanImageButton.transform = CGAffineTransformIdentity;
+    self.scanImageButton.frame = CGRectWithXYAndSize(self.cancelButton.frame.origin.x,
+                                                       self.cancelButton.frame.origin.y - self.scanImageButton.frame.size.height - 10.0f,
+                                                       self.scanImageButton.frame.size);
+  }
 
   if (disableTransactionActions) {
     [CATransaction commit];
@@ -478,6 +641,16 @@
 #pragma mark - CardIOViewDelegate method
 
 - (void)cardIOView:(CardIOView *)cardIOView didScanCard:(CardIOCreditCardInfo *)cardInfo {
+  
+  
+  /*
+  [cardIOView setForceSessionInterruption:YES];
+  dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+    [cardIOView setForceSessionInterruption:NO];
+  });
+  */
+  
+  return;
   self.context.detectionMode = cardIOView.detectionMode;  // may have changed from Auto to CardImageOnly
 
   if (![cardInfo.cardNumber length] || self.context.suppressScanConfirmation

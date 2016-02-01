@@ -15,6 +15,7 @@
 @property(nonatomic, retain, readwrite) UIColor *guideColor;
 @property(nonatomic, assign, readwrite) CGFloat scannedImageDuration;
 @property(nonatomic, assign, readwrite) BOOL allowFreelyRotatingCardGuide;
+@property (nonatomic, assign, readwrite) UIInterfaceOrientationMask allowedInterfaceOrientationMask;
 @property(nonatomic, assign, readwrite) BOOL scanExpiry;
 @property(nonatomic, copy, readwrite)   NSString *scanInstructions;
 @property(nonatomic, assign, readwrite) BOOL hideCardIOLogo;
@@ -28,6 +29,7 @@
 
 @property(nonatomic, assign, readwrite) CardIODetectionMode detectionMode;
 
+@property(nonatomic, copy, readwrite)void(^externalCardGuideInformation)(CGRect guideFrame, BOOL topEdgeRecognized, BOOL leftEdgeRecognized, BOOL  bottomEdgeRecognized, BOOL rightEdgeRecognized, BOOL isRotating, BOOL detectedCard, BOOL recommendedShowingInstructions);
 
 @property(nonatomic, copy) NSArray *outputs;
 @end

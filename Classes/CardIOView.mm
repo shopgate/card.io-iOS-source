@@ -36,7 +36,7 @@ NSString * const CardIOScanningOrientationDidChangeNotification = @"CardIOScanni
 NSString * const CardIOCurrentScanningOrientation = @"CardIOCurrentScanningOrientation";
 NSString * const CardIOScanningOrientationAnimationDuration = @"CardIOScanningOrientationAnimationDuration";
 
-@interface CardIOView () <CardIOVideoStreamDelegate>
+@interface CardIOView () <CardIOVideoStreamDelegate,CardIOCameraViewDelegate>
 
 @property(nonatomic, strong, readwrite) CardIOConfig *config;
 @property(nonatomic, strong, readwrite) CardIOCameraView *cameraView;
@@ -224,6 +224,7 @@ NSString * const CardIOScanningOrientationAnimationDuration = @"CardIOScanningOr
 -(void)setForceTorchToBeOn:(BOOL)forceTorchToBeOn{
   CardIOLogVerbose(@"Torch forced to be %@", forceTorchToBeOn ? @"ON" : @"OFF");
   self.config.forceTorchToBeOn = forceTorchToBeOn;
+  [self.cameraView adaptToForcedTorch];
 }
 
 -(void)setCardScannerEnabled:(BOOL)cardScannerEnabled{
@@ -232,8 +233,14 @@ NSString * const CardIOScanningOrientationAnimationDuration = @"CardIOScanningOr
 
 -(void)setCardScannerEnabled:(BOOL)cardScannerEnabled animated:(BOOL)animated {
   if (!self.config.outputs) {
-    CardIOLogWarn(@"CardScanner cannot be enabled or disabled when not using CardIOOutputs. Scanner will remain anabled.");
+    CardIOLogWarn(@"CardScanner cannot be enabled or disabled when not using CardIOOutputs. Scanner will remain enabled.");
     return;
+  }
+  for (CardIOOutput *output in self.config.outputs) {
+    if ([[output class] isSubclassOfClass:[CardIOOutputCardScanner class]]) {
+      CardIOLogWarn(@"CardScanner cannot be enabled or disabled when outputs doesn't contain card scanner.");
+      return;
+    }
   }
   if (self.cardScannerEnabled != cardScannerEnabled){
     CardIOLogVerbose(@"Cardscanner will be%@ set to %@ABLED.", animated ? @" animated" : @"", cardScannerEnabled ? @"EN" : @"DIS");
@@ -246,6 +253,16 @@ NSString * const CardIOScanningOrientationAnimationDuration = @"CardIOScanningOr
   CardIOLogVerbose(@"CardIO will%@ be forced to interrupt session.", forceSessionInterruption ? @"" : @" no longer");
   self.config.forceSessionInterruption = forceSessionInterruption;
   [self.cameraView adaptSessionInterruption];
+}
+
+-(void)setAllowedInterfaceOrientationMask:(UIInterfaceOrientationMask)allowedInterfaceOrientationMask {
+  self.config.allowedInterfaceOrientationMask = allowedInterfaceOrientationMask;
+  [self.cameraView didReceiveDeviceOrientationNotification:nil];
+}
+
+-(void)setExternalCardGuideInformation:(CardGuideInformation)externalCardGuideInformation {
+  self.config.externalCardGuideInformation = externalCardGuideInformation;
+  [self.cameraView adaptGuideLayerVisibilityAnimated:NO];
 }
 
 #pragma mark - Property accessors (passthroughs to CardIOCameraView)
@@ -449,6 +466,20 @@ NSString * const CardIOScanningOrientationAnimationDuration = @"CardIOScanningOr
   AudioServicesPlayAlertSound(kSystemSoundID_Vibrate);
 }
 
+#pragma mark - CardIOCameraViewDelegate method and related methods
+
+-(void)guidelayerDidSetCardGuideInformation:(CGRect)internalGuideFrame foundTopEdge:(BOOL)foundTop foundLeftEdge:(BOOL)foundLeft foundBottomEdge:(BOOL)foundBottom foundRightEgde:(BOOL)foundRight isRotating:(BOOL)isRotating detectedCard:(BOOL)detectedCard recommendedShowingInstructions:(BOOL)recommendedShowingInstructions{
+
+  if (!CGPointEqualToPoint(self.cameraView.frame.origin,CGPointZero) ) {
+    internalGuideFrame = CGRectOffset(internalGuideFrame, self.cameraView.frame.origin.x , self.cameraView.frame.origin.y);
+  }
+  
+  if (self.config.externalCardGuideInformation) {
+    self.config.externalCardGuideInformation(internalGuideFrame,foundTop,foundLeft,foundBottom,foundRight,isRotating,detectedCard, recommendedShowingInstructions);
+  }
+}
+
+
 #pragma mark - Description method
 
 #define DESCRIBE_BOOL(property) (self.property ? "; " #property : "")
@@ -501,7 +532,8 @@ CONFIG_PASSTHROUGH_READWRITE(CardIODetectionMode, detectionMode, DetectionMode)
 CONFIG_PASSTHROUGH_GETTER(BOOL, forceTorchToBeOn)
 CONFIG_PASSTHROUGH_GETTER(BOOL, cardScannerEnabled)
 CONFIG_PASSTHROUGH_GETTER(BOOL, forceSessionInterruption)
-
+CONFIG_PASSTHROUGH_GETTER(UIInterfaceOrientationMask, allowedInterfaceOrientationMask)
+CONFIG_PASSTHROUGH_GETTER(CardGuideInformation, externalCardGuideInformation)
 
 @end
 

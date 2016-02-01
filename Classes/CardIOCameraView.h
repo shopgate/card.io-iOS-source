@@ -17,9 +17,16 @@
 @class CardIOVideoStream;
 @class CardIOCardScanner;
 
+
+@protocol CardIOCameraViewDelegate <NSObject>
+@required
+- (void)guidelayerDidSetCardGuideInformation:(CGRect)internalGuideFrame foundTopEdge:(BOOL)foundTop foundLeftEdge:(BOOL)foundLeft foundBottomEdge:(BOOL)foundBottom foundRightEgde:(BOOL)foundRight isRotating:(BOOL)isRotating detectedCard:(BOOL)detectedCard recommendedShowingInstructions:(BOOL)recommendedShowingInstructions;
+@end
+
+
 @interface CardIOCameraView : UIView<CardIOVideoStreamDelegate, CardIOGuideLayerDelegate>
 
-- (id)initWithFrame:(CGRect)frame delegate:(id<CardIOVideoStreamDelegate>)delegate config:(CardIOConfig *)config;
+- (id)initWithFrame:(CGRect)frame delegate:(id<CardIOVideoStreamDelegate,CardIOCameraViewDelegate>)delegate config:(CardIOConfig *)config;
 
 - (void)updateLightButtonState;
 
@@ -34,9 +41,8 @@
 // CGRect for the actual camera preview area within the cameraView
 - (CGRect)cameraPreviewFrame;
 
-/// Setting to YES forces the torch of the camera to be on. Setting to NO the card scanner decides if it needs a torch light.
-/// Default is NO.
-- (void) torchIsForcedToBeOn:(BOOL)torchIsForcedToBeOn;
+/// The torch will be adapted to current forcedTorched
+- (void) adaptToForcedTorch;
 
 /// Intends the camera view to apdapt the visibility to the current state in the according config object. This can
 /// happen animated or non-animated
@@ -58,9 +64,11 @@
 
 
 @property(nonatomic, strong, readonly)  CardIOCardScanner *scanner;
-@property(nonatomic, weak, readwrite)   id<CardIOVideoStreamDelegate> delegate;
+@property(nonatomic, weak, readwrite)   id<CardIOVideoStreamDelegate,CardIOCameraViewDelegate> delegate;
 @property(nonatomic, strong, readwrite) UIFont *instructionsFont;
 @property(nonatomic, assign, readwrite) BOOL suppressFauxCardLayer;
+
+-(void)didReceiveDeviceOrientationNotification:(NSNotification *)notification;
 
 @end
 

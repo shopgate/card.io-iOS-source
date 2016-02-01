@@ -372,6 +372,18 @@ typedef enum {
   [self animateCornerLayer:self.bottomRightLayer atPoint:bottomRight withPositionType:kBottomRight];
   
   [self animateCardMask:guideFrame];
+  
+}
+
++(CGRect)externalGuideFrameForFrame:(CGRect)frame {
+  //FrameOrientation frameOrientation = frameOrientationWithInterfaceOrientation((UIInterfaceOrientation)self.deviceOrientation);
+  UIInterfaceOrientation interfaceOrientation = [UIApplication sharedApplication].statusBarOrientation;
+  if (UIInterfaceOrientationIsPortrait(interfaceOrientation)) {
+    return frame;
+  }
+  else {
+    return CGRectMake(frame.origin.y, frame.origin.x, frame.size.height, frame.size.width);
+  }
 }
 
 + (CGRect)guideFrameForDeviceOrientation:(UIDeviceOrientation)deviceOrientation inViewWithSize:(CGSize)size {
@@ -439,6 +451,11 @@ typedef enum {
     [self rotateDebugOverlay];
 #endif
   }
+  
+  if (self.isEnabledExternalCardInformation){
+    //we have to send the frame to the delegate, but
+    [self.guideLayerDelegate guidelayerDidSetCardGuideInformation:[CardIOGuideLayer externalGuideFrameForFrame:self.guideFrame] foundTopEdge:!self.topLayer.hidden foundLeftEdge:!self.leftLayer.hidden foundBottomEdge:!self.bottomLayer.hidden foundRightEgde:!self.rightLayer.hidden isRotating:YES detectedCard:self.allEdgesFoundDecayedScore >= 0.7f];
+  }
 }
 
 #if CARDIO_DEBUG
@@ -475,6 +492,11 @@ typedef enum {
 #if CARDIO_DEBUG
   self.debugOverlay.contents = (id)self.videoFrame.debugCardImage.CGImage;
 #endif
+  //if external guide information
+  if (self.isEnabledExternalCardInformation){
+    //we have to send the frame to the delegate, but
+    [self.guideLayerDelegate guidelayerDidSetCardGuideInformation:[CardIOGuideLayer externalGuideFrameForFrame:self.guideFrame] foundTopEdge:!self.topLayer.hidden foundLeftEdge:!self.leftLayer.hidden foundBottomEdge:!self.bottomLayer.hidden foundRightEgde:!self.rightLayer.hidden isRotating:NO detectedCard:self.allEdgesFoundDecayedScore >= 0.7f];
+  }
 }
 
 - (void)setGuideColor:(UIColor *)newGuideColor {

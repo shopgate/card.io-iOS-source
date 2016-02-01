@@ -270,15 +270,15 @@
 		A553B7171BE322A1006DF551 /* CardIO.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 92263D701B83ACBB003FE678 /* CardIO.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		C9072DC91C493A400054988E /* CardIOLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = C9072DC71C493A400054988E /* CardIOLogger.h */; };
 		C9072DCA1C493A400054988E /* CardIOLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = C9072DC81C493A400054988E /* CardIOLogger.m */; };
-		C9072DCB1C4946120054988E /* CardIOOutput.h in Headers */ = {isa = PBXBuildFile; fileRef = C93765561C43D043006B4279 /* CardIOOutput.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		C9072DCC1C4946330054988E /* CardIOOutput+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = C93765591C43D0A5006B4279 /* CardIOOutput+Internal.h */; };
 		C9072DCD1C49463D0054988E /* CardIOOutput.m in Sources */ = {isa = PBXBuildFile; fileRef = C93765571C43D043006B4279 /* CardIOOutput.m */; };
 		C9072DCE1C49464E0054988E /* CardIOLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = C9072DC71C493A400054988E /* CardIOLogger.h */; };
 		C9072DCF1C4946570054988E /* CardIOLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = C9072DC81C493A400054988E /* CardIOLogger.m */; };
 		C9072DD21C4E4EF80054988E /* CardIOConfig+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = C9072DD01C4E4EF80054988E /* CardIOConfig+Internal.h */; };
 		C937655C1C43D4F9006B4279 /* CardIOOutput.m in Sources */ = {isa = PBXBuildFile; fileRef = C93765571C43D043006B4279 /* CardIOOutput.m */; };
-		C937655D1C43D57C006B4279 /* CardIOOutput.h in Headers */ = {isa = PBXBuildFile; fileRef = C93765561C43D043006B4279 /* CardIOOutput.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		C937655E1C43D57C006B4279 /* CardIOOutput+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = C93765591C43D0A5006B4279 /* CardIOOutput+Internal.h */; };
+		C9613B0C1C5274500070E37D /* CardIOOutput.h in Headers */ = {isa = PBXBuildFile; fileRef = C9613B0B1C52730B0070E37D /* CardIOOutput.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		C9613B0D1C5274530070E37D /* CardIOOutput.h in Headers */ = {isa = PBXBuildFile; fileRef = C9613B0B1C52730B0070E37D /* CardIOOutput.h */; settings = {ATTRIBUTES = (Public, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -843,9 +843,9 @@
 		C9072DC71C493A400054988E /* CardIOLogger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CardIOLogger.h; path = Classes/CardIOLogger.h; sourceTree = "<group>"; };
 		C9072DC81C493A400054988E /* CardIOLogger.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CardIOLogger.m; path = Classes/CardIOLogger.m; sourceTree = "<group>"; };
 		C9072DD01C4E4EF80054988E /* CardIOConfig+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CardIOConfig+Internal.h"; sourceTree = "<group>"; };
-		C93765561C43D043006B4279 /* CardIOOutput.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CardIOOutput.h; path = Classes/CardIOOutput.h; sourceTree = "<group>"; };
 		C93765571C43D043006B4279 /* CardIOOutput.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CardIOOutput.m; sourceTree = "<group>"; };
 		C93765591C43D0A5006B4279 /* CardIOOutput+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CardIOOutput+Internal.h"; sourceTree = "<group>"; };
+		C9613B0B1C52730B0070E37D /* CardIOOutput.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CardIOOutput.h; path = CardIO_Public_API/CardIOOutput.h; sourceTree = "<group>"; };
 		D13A60C213D4BF4400123D1A /* CardIOCreditCardNumberFormatter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CardIOCreditCardNumberFormatter.h; path = Classes/CardIOCreditCardNumberFormatter.h; sourceTree = "<group>"; };
 		D13A60C313D4BF4400123D1A /* CardIOCreditCardNumberFormatter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CardIOCreditCardNumberFormatter.m; path = Classes/CardIOCreditCardNumberFormatter.m; sourceTree = "<group>"; };
 		D13A60C613D4F3A900123D1A /* CardIOCreditCardExpiryFormatter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CardIOCreditCardExpiryFormatter.h; path = Classes/CardIOCreditCardExpiryFormatter.h; sourceTree = "<group>"; };
@@ -1040,6 +1040,7 @@
 		030735D6134148FE00663C26 /* Public API */ = {
 			isa = PBXGroup;
 			children = (
+				C9613B0B1C52730B0070E37D /* CardIOOutput.h */,
 				D1824381144CF73400829B91 /* CardIO.h */,
 				D1824386144CF73400829B91 /* CardIOCreditCardInfo.h */,
 				3E587F8A18C7E165000C1D3A /* CardIODetectionMode.h */,
@@ -1048,7 +1049,6 @@
 				D1824387144CF73400829B91 /* CardIOPaymentViewController.h */,
 				D1824388144CF73400829B91 /* CardIOPaymentViewControllerDelegate.h */,
 				3ED8A876197DBDA900069761 /* CardIOUtilities.h */,
-				C93765561C43D043006B4279 /* CardIOOutput.h */,
 				3E6DB8B418513EFC00C5853E /* acknowledgments.md */,
 				3E6DB8B518513EFC00C5853E /* LICENSE.md */,
 				3E6DB8B618513EFC00C5853E /* README.md */,
@@ -2014,9 +2014,9 @@
 				3E9F4C21181F03F300F33B48 /* CardIOExpiryTextFieldDelegate.h in Headers */,
 				3E9F4C23181F03F300F33B48 /* canny.h in Headers */,
 				3E9F4C24181F03F300F33B48 /* hough.h in Headers */,
+				C9613B0C1C5274500070E37D /* CardIOOutput.h in Headers */,
 				3E9F4C25181F03F300F33B48 /* sobel.h in Headers */,
 				C9072DCC1C4946330054988E /* CardIOOutput+Internal.h in Headers */,
-				C9072DCB1C4946120054988E /* CardIOOutput.h in Headers */,
 				3E9F4C26181F03F300F33B48 /* stats.h in Headers */,
 				3E9F4C27181F03F300F33B48 /* convert.h in Headers */,
 				3E9F4C28181F03F300F33B48 /* CardIOTransitionView.h in Headers */,
@@ -2047,7 +2047,6 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C937655D1C43D57C006B4279 /* CardIOOutput.h in Headers */,
 				929AD7811B8CA8FD00F6D18E /* CardIODetectionMode.h in Headers */,
 				929AD7821B8CA8FD00F6D18E /* CardIOUtilities.h in Headers */,
 				92263DCE1B83AD65003FE678 /* CardIO.h in Headers */,
@@ -2067,6 +2066,7 @@
 				92263E291B83B903003FE678 /* CardIONumbersTextFieldDelegate.h in Headers */,
 				92263E231B83B6C1003FE678 /* hough.h in Headers */,
 				92263E241B83B6E0003FE678 /* sobel.h in Headers */,
+				C9613B0D1C5274530070E37D /* CardIOOutput.h in Headers */,
 				92263E251B83B6E3003FE678 /* stats.h in Headers */,
 				92263DE11B83ADD4003FE678 /* CardIOAnimation.h in Headers */,
 				92263E2F1B83B9B0003FE678 /* geometry.h in Headers */,

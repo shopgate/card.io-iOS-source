@@ -15,6 +15,7 @@
     _allowFreelyRotatingCardGuide = YES;
     _scanReport = [[CardIOAnalytics alloc] initWithContext:nil];
     _scanExpiry = YES;
+    _allowedInterfaceOrientationMask = 0;
   }
   return self;
 }
