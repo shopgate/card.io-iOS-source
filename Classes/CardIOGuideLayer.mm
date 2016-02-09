@@ -375,16 +375,6 @@ typedef enum {
   
 }
 
-+(CGRect)externalGuideFrameForFrame:(CGRect)frame {
-  //FrameOrientation frameOrientation = frameOrientationWithInterfaceOrientation((UIInterfaceOrientation)self.deviceOrientation);
-  UIInterfaceOrientation interfaceOrientation = [UIApplication sharedApplication].statusBarOrientation;
-  if (UIInterfaceOrientationIsPortrait(interfaceOrientation)) {
-    return frame;
-  }
-  else {
-    return CGRectMake(frame.origin.y, frame.origin.x, frame.size.height, frame.size.width);
-  }
-}
 
 + (CGRect)guideFrameForDeviceOrientation:(UIDeviceOrientation)deviceOrientation inViewWithSize:(CGSize)size {
   // Cases whose combinations must be considered when touching this code:
@@ -454,7 +444,7 @@ typedef enum {
   
   if (self.isEnabledExternalCardInformation){
     //we have to send the frame to the delegate, but
-    [self.guideLayerDelegate guidelayerDidSetCardGuideInformation:[CardIOGuideLayer externalGuideFrameForFrame:self.guideFrame] foundTopEdge:!self.topLayer.hidden foundLeftEdge:!self.leftLayer.hidden foundBottomEdge:!self.bottomLayer.hidden foundRightEgde:!self.rightLayer.hidden isRotating:YES detectedCard:self.allEdgesFoundDecayedScore >= 0.7f];
+    [self.guideLayerDelegate guidelayerDidSetCardGuideInformation:self.guideFrame foundTopEdge:!self.topLayer.hidden foundLeftEdge:!self.leftLayer.hidden foundBottomEdge:!self.bottomLayer.hidden foundRightEgde:!self.rightLayer.hidden isRotating:YES detectedCard:self.allEdgesFoundDecayedScore >= 0.7f];
   }
 }
 
@@ -495,7 +485,7 @@ typedef enum {
   //if external guide information
   if (self.isEnabledExternalCardInformation){
     //we have to send the frame to the delegate, but
-    [self.guideLayerDelegate guidelayerDidSetCardGuideInformation:[CardIOGuideLayer externalGuideFrameForFrame:self.guideFrame] foundTopEdge:!self.topLayer.hidden foundLeftEdge:!self.leftLayer.hidden foundBottomEdge:!self.bottomLayer.hidden foundRightEgde:!self.rightLayer.hidden isRotating:NO detectedCard:self.allEdgesFoundDecayedScore >= 0.7f];
+    [self.guideLayerDelegate guidelayerDidSetCardGuideInformation:self.guideFrame foundTopEdge:!self.topLayer.hidden foundLeftEdge:!self.leftLayer.hidden foundBottomEdge:!self.bottomLayer.hidden foundRightEgde:!self.rightLayer.hidden isRotating:NO detectedCard:self.allEdgesFoundDecayedScore >= 0.7f];
   }
 }
 

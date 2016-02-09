@@ -176,7 +176,7 @@
   
   
 
-  self.cardIOView = [[CardIOView alloc] initWithFrame:cardIOViewFrame outputs:@[barcodeOutout,imageOutput/*,cardScannerOutput*/] captureSessionPreset:AVCaptureSessionPresetInputPriority];
+  self.cardIOView = [[CardIOView alloc] initWithFrame:cardIOViewFrame outputs:@[barcodeOutout,imageOutput/*,cardScannerOutput*/] captureSessionPreset:AVCaptureSessionPresetPhoto];
 
   //self.cardIOView = [[CardIOView alloc] initWithFrame:cardIOViewFrame];
   //self.cardIOView.delegate = self;
@@ -187,7 +187,7 @@
   self.cardIOView.guideColor = nil; //TODO, does not work
   self.cardIOView.scannedImageDuration = 0;
   self.cardIOView.allowFreelyRotatingCardGuide = NO;
-  self.cardIOView.allowedInterfaceOrientationMask = UIInterfaceOrientationPortrait;
+  self.cardIOView.allowedInterfaceOrientationMask = UIInterfaceOrientationMaskLandscape;
   self.cardIOView.scanInstructions = @"FOO";//self.context.scanInstructions; todo
   self.cardIOView.scanExpiry = self.context.collectExpiry && self.context.scanExpiry;
   
@@ -198,7 +198,7 @@
   self.guide.alpha = 1.f;
   self.guide.backgroundColor = [UIColor colorWithRed:0.5 green:0 blue:0 alpha:0.3f];
   self.guide.tintColor = [UIColor colorWithRed:0.5 green:0 blue:0 alpha:0.3f];
-  /*self.cardIOView.externalCardGuideInformation = ^void (CGRect guideFrame, BOOL topEdgeRecognized, BOOL leftEdgeRecognized, BOOL  bottomEdgeRecognized, BOOL rightEdgeRecognized, BOOL isRotating, BOOL detectedCard, BOOL recommendedShowingInstructions) {
+  self.cardIOView.externalCardGuideInformation = ^void (CGRect guideFrame, BOOL topEdgeRecognized, BOOL leftEdgeRecognized, BOOL  bottomEdgeRecognized, BOOL rightEdgeRecognized, BOOL isRotating, BOOL detectedCard, BOOL recommendedShowingInstructions) {
     //debug joe
 #ifdef DEBUG
     //TODO: joe
@@ -207,7 +207,7 @@
     int test = 0;
 #endif
     //debug end
-    };*/
+    };
 
   
   

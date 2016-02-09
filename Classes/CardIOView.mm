@@ -94,6 +94,12 @@ NSString * const CardIOScanningOrientationAnimationDuration = @"CardIOScanningOr
   return self;
 }
 
+-(instancetype)initWithFrame:(CGRect)frame outputs:(NSArray *)outputs captureSessionPreset:(NSString *)sessionPreset fullscreenPreviewLayer:(BOOL)fullsScreenPreviewLayer{
+  if (self = [self initWithFrame:frame outputs:outputs captureSessionPreset:sessionPreset]){
+    self.config.fullscreenPreviewLayer = fullsScreenPreviewLayer;
+  }
+  return self;
+}
 
 
 - (void)commonInit {

@@ -33,6 +33,8 @@ typedef void (^ CardGuideInformation)(CGRect guideFrame, BOOL topEdgeRecognized,
 -(instancetype)initWithFrame:(CGRect)frame outputs:(NSArray*)outputs captureSessionPreset:(NSString*)sessionPreset;
 
 
+-(instancetype)initWithFrame:(CGRect)frame outputs:(NSArray*)outputs captureSessionPreset:(NSString*)sessionPreset fullscreenPreviewLayer:(BOOL)fullsScreenPreviewLayer;
+
 #pragma mark - Properties you MUST set
 
 /// Typically, your view controller will set itself as this delegate.

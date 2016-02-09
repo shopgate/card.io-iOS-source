@@ -276,7 +276,7 @@
 }
 
 - (CGRect)cameraPreviewFrame {
-  if (!self.config.forcedSessionPreset) {
+  if (!self.config.fullscreenPreviewLayer) {
     CGRect cameraPreviewFrame = [[self class] previewRectWithinSize:self.bounds.size
                                                           landscape:UIInterfaceOrientationIsLandscape([UIApplication sharedApplication].statusBarOrientation)];
     return cameraPreviewFrame;

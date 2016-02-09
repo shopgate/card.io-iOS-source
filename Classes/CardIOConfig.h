@@ -26,6 +26,7 @@
 @property(nonatomic, assign, readwrite) BOOL forceSessionInterruption;
 @property(nonatomic, assign, readwrite) BOOL autoSessionStop;
 @property(nonatomic, assign, readonly)  BOOL isAutoInterupted;
+@property(nonatomic, assign, readwrite)  BOOL fullscreenPreviewLayer;
 
 @property(nonatomic, assign, readwrite) CardIODetectionMode detectionMode;
 
