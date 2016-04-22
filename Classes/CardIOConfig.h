@@ -21,12 +21,15 @@
 @property(nonatomic, assign, readwrite) BOOL hideCardIOLogo;
 @property(nonatomic, retain, readwrite) UIView *scanOverlayView;
 @property(nonatomic, assign, readwrite) BOOL forceTorchToBeOn;
+@property(nonatomic, assign, readwrite) BOOL automaticTorchModeEnabled;
+@property(nonatomic, assign, readwrite) BOOL automaticVibrationModeEnabled;
 @property(nonatomic, assign, readwrite) BOOL cardScannerEnabled;
 @property(nonatomic, strong, readwrite) NSString * forcedSessionPreset;
 @property(nonatomic, assign, readwrite) BOOL forceSessionInterruption;
 @property(nonatomic, assign, readwrite) BOOL autoSessionStop;
 @property(nonatomic, assign, readonly)  BOOL isAutoInterupted;
 @property(nonatomic, assign, readwrite)  BOOL fullscreenPreviewLayer;
+@property(nonatomic, assign, readwrite)  BOOL animatedShutter;
 
 @property(nonatomic, assign, readwrite) CardIODetectionMode detectionMode;
 

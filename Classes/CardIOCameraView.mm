@@ -196,6 +196,10 @@
       [self.lightButton addTarget:self action:@selector(toggleTorch:) forControlEvents:UIControlEventTouchUpInside];
       [self addSubview:self.lightButton];
     }
+    
+    if ([self.videoStream hasTorch] && self.config.forceTorchToBeOn) {
+      [self.videoStream setTorchOn:YES];
+    }
 
     // Set up logo
     NSString *logoImageName = config.useCardIOLogo ? @"card_io_logo.png" : @"paypal_logo.png";
@@ -316,16 +320,24 @@
 -(void)adaptToForcedTorch {
   BOOL torchWasOn = [self.videoStream torchIsOn];
   if (torchWasOn != self.config.forceTorchToBeOn) {
-    BOOL success = [self.videoStream setTorchOn:!torchWasOn];
-    if (success) {
-      [self updateLightButtonState];
+    if (
+        (!torchWasOn && self.config.forceTorchToBeOn && self.config.automaticTorchModeEnabled)
+        ||
+        (!self.config.automaticTorchModeEnabled)
+        ) {
+      BOOL success = [self.videoStream setTorchOn:!torchWasOn];
+      if (success) {
+        [self updateLightButtonState];
+      }
     }
   }
 }
 
 - (void)updateLightButtonState {
+  BOOL torchIsOn = [self.videoStream torchIsOn];
+  
   if (self.lightButton) {
-    BOOL torchIsOn = [self.videoStream torchIsOn];
+    
     [self.lightButton setImage:[CardIOResource boltImageForTorchOn:torchIsOn] forState:UIControlStateNormal];
     self.lightButton.accessibilityLabel = torchIsOn ?
             CardIOLocalizedString(@"deactivate_flash", self.config.languageOrLocale) : // Turn flash off.
@@ -586,7 +598,7 @@
 #pragma mark - CardIOVideoStreamDelegate methods
 
 - (void)videoStream:(CardIOVideoStream *)stream didProcessFrame:(CardIOVideoFrame *)processedFrame {
-  [self.shutter setOpen:YES animated:YES duration:0.5f];
+  [self.shutter setOpen:YES animated:self.config.animatedShutter duration:0.5f];
   
   if (self.cardGuide.isEnabledExternalCardInformation != (self.config.externalCardGuideInformation!=nil)) {
     self.cardGuide.isEnabledExternalCardInformation=!self.cardGuide.isEnabledExternalCardInformation;
@@ -686,6 +698,10 @@
     }
     return defaultOrientation;
   }
+}
+
+-(void)videoStream:(CardIOVideoStream *)stream didChangeTorchIsNowOn:(BOOL)isTorchNowOn {
+  [[self delegate] torchChangedStatusIsOn:isTorchNowOn];
 }
 
 #pragma mark - Manual property implementations

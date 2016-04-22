@@ -14,6 +14,8 @@
 
 @optional
 
+- (void)videoStream:(CardIOVideoStream *)stream didChangeTorchIsNowOn:(BOOL)isTorchNowOn;
+
 - (BOOL)isSupportedOverlayOrientation:(UIInterfaceOrientation)orientation;
 - (UIInterfaceOrientation)defaultSupportedOverlayOrientation;
 

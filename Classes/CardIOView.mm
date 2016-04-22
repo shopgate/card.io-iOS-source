@@ -228,9 +228,20 @@ NSString * const CardIOScanningOrientationAnimationDuration = @"CardIOScanningOr
 #pragma mark - Property accessors (passthroughs to Config, but with direct action)
 
 -(void)setForceTorchToBeOn:(BOOL)forceTorchToBeOn{
-  CardIOLogVerbose(@"Torch forced to be %@", forceTorchToBeOn ? @"ON" : @"OFF");
+  CardIOLogVerbose(@"Torch forced to be on: %@", forceTorchToBeOn ? @"YES" : @"NO");
   self.config.forceTorchToBeOn = forceTorchToBeOn;
   [self.cameraView adaptToForcedTorch];
+}
+
+-(void)setAutomaticTorchModeEnabled:(BOOL)automaticTorchModeEnabled {
+  CardIOLogVerbose(@"Automatic torch mode to be on: %@", automaticTorchModeEnabled ? @"YES" : @"NO");
+  self.config.automaticTorchModeEnabled = automaticTorchModeEnabled;
+  [self.cameraView adaptToForcedTorch];
+}
+
+-(void)setAutomaticVibrationModeEnabled:(BOOL)automaticVibrationModeEnabled {
+  CardIOLogVerbose(@"Automatic vibration mode set to be on %@", automaticVibrationModeEnabled ? @"YES" : @"NO");
+  self.config.automaticVibrationModeEnabled = automaticVibrationModeEnabled;
 }
 
 -(void)setCardScannerEnabled:(BOOL)cardScannerEnabled{
@@ -469,7 +480,9 @@ NSString * const CardIOScanningOrientationAnimationDuration = @"CardIOScanningOr
 }
 
 - (void)vibrate {
-  AudioServicesPlayAlertSound(kSystemSoundID_Vibrate);
+  if (self.config.automaticVibrationModeEnabled) {
+    AudioServicesPlayAlertSound(kSystemSoundID_Vibrate);
+  }
 }
 
 #pragma mark - CardIOCameraViewDelegate method and related methods
@@ -482,6 +495,13 @@ NSString * const CardIOScanningOrientationAnimationDuration = @"CardIOScanningOr
   
   if (self.config.externalCardGuideInformation) {
     self.config.externalCardGuideInformation(internalGuideFrame,foundTop,foundLeft,foundBottom,foundRight,isRotating,detectedCard, recommendedShowingInstructions);
+  }
+}
+
+
+-(void)torchChangedStatusIsOn:(BOOL)isTorchOn {
+  if ([self.delegate respondsToSelector:@selector(cardIOView:didChangeTorchStatusIsNowOn:)]){
+    [self.delegate cardIOView:self didChangeTorchStatusIsNowOn:isTorchOn];
   }
 }
 
@@ -532,12 +552,17 @@ CONFIG_PASSTHROUGH_READWRITE(NSString *, scanInstructions, ScanInstructions)
 CONFIG_PASSTHROUGH_READWRITE(BOOL, scanExpiry, ScanExpiry)
 CONFIG_PASSTHROUGH_READWRITE(UIView *, scanOverlayView, ScanOverlayView)
 CONFIG_PASSTHROUGH_READWRITE(BOOL, autoSessionStop, AutoSessionStop)
+CONFIG_PASSTHROUGH_READWRITE(BOOL, animatedShutter, AnimatedShutter)
 
 CONFIG_PASSTHROUGH_READWRITE(CardIODetectionMode, detectionMode, DetectionMode)
 
 CONFIG_PASSTHROUGH_GETTER(BOOL, forceTorchToBeOn)
+CONFIG_PASSTHROUGH_GETTER(BOOL, automaticTorchModeEnabled)
+CONFIG_PASSTHROUGH_GETTER(BOOL, automaticVibrationModeEnabled)
 CONFIG_PASSTHROUGH_GETTER(BOOL, cardScannerEnabled)
 CONFIG_PASSTHROUGH_GETTER(BOOL, forceSessionInterruption)
+
+
 CONFIG_PASSTHROUGH_GETTER(UIInterfaceOrientationMask, allowedInterfaceOrientationMask)
 CONFIG_PASSTHROUGH_GETTER(CardGuideInformation, externalCardGuideInformation)
 

@@ -123,6 +123,19 @@ typedef void (^ CardGuideInformation)(CGRect guideFrame, BOOL topEdgeRecognized,
 /// Default is NO.
 @property(nonatomic, assign, readwrite) BOOL forceTorchToBeOn;
 
+/// Setting to YES, the torch switches the toch to be on, when it is too dark to scan. Setting to no, the torch can be switched on and OFF with property 'forceTorchToBeOn'
+/// Default is YES.
+@property (nonatomic, assign, readwrite) BOOL automaticTorchModeEnabled;
+
+/// Setting to YES, the device will vibrate, when a card is detected and scanned.
+/// Default is YES.
+@property (nonatomic, assign, readwrite) BOOL automaticVibrationModeEnabled;
+
+
+/// Setting to YES, the device will animate Shutter.
+/// Default is YES.
+@property (nonatomic, assign, readwrite) BOOL animatedShutter;
+
 /// In case there are used cardIO outputs to manage the scanner, setting this to YES the cardScanner is active and the card guide is visible.
 /// Setting this to no, the cardScanner isn't active and the card guide isn't visible.
 /// Default: In case no card outputs are used default is YES. In case that there are used cardIO outputs, the default value depends on whether

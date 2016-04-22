@@ -16,6 +16,9 @@
     _scanReport = [[CardIOAnalytics alloc] initWithContext:nil];
     _scanExpiry = YES;
     _allowedInterfaceOrientationMask = 0;
+    _automaticTorchModeEnabled = YES;
+    _automaticVibrationModeEnabled = YES;
+    _animatedShutter = YES;
   }
   return self;
 }

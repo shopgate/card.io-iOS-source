@@ -360,11 +360,18 @@
 }
 
 - (BOOL)setTorchOn:(BOOL)torchShouldBeOn {
+  if (![self hasTorch]){
+    return NO;
+  }
   if (!torchShouldBeOn && self.config.forceTorchToBeOn) {
     //if someone will stop the torch, but is is forced to be on, it wont be turned off
     return NO;
   }
-  return [self changeCameraConfiguration:^{
+  if (torchShouldBeOn && !self.config.forceTorchToBeOn && !self.config.automaticTorchModeEnabled) {
+    return NO;
+  }
+  BOOL informDelegate = torchShouldBeOn!=[self torchIsOn];
+  BOOL success = [self changeCameraConfiguration:^{
     AVCaptureTorchMode newTorchMode = torchShouldBeOn ? AVCaptureTorchModeOn : AVCaptureTorchModeOff;
     [self.camera setTorchMode:newTorchMode];
   }
@@ -372,9 +379,27 @@
   withErrorMessage:@"CardIO couldn't lock for configuration to turn on/off torch: %@"
 #endif
   ];
+  if (success && informDelegate && [self.delegate respondsToSelector:@selector(videoStream:didChangeTorchIsNowOn:)]) {
+    [self.delegate videoStream:self didChangeTorchIsNowOn:torchShouldBeOn];
+  }
+  return success;
 }
 
 - (BOOL)setTorchModeOnWithLevel:(float)torchLevel {
+  if (![self hasTorch]){
+    return NO;
+  }
+  BOOL torchShouldBeOn = torchLevel>0;
+  
+  if (!torchShouldBeOn && self.config.forceTorchToBeOn) {
+    //if someone will stop the torch, but is is forced to be on, it wont be turned off
+    return NO;
+  }
+  if (torchShouldBeOn && !self.config.forceTorchToBeOn && !self.config.automaticTorchModeEnabled) {
+    return NO;
+  }
+  BOOL informDelegate = torchShouldBeOn!=[self torchIsOn];
+  
   __block BOOL torchSuccess = NO;
   BOOL success = [self changeCameraConfiguration:^{
     NSError *error;
@@ -384,7 +409,9 @@
   withErrorMessage:@"CardIO couldn't lock for configuration to turn on/off torch with level: %@"
 #endif
   ];
-
+  if (success && torchSuccess && informDelegate && [self.delegate respondsToSelector:@selector(videoStream:didChangeTorchIsNowOn:)]) {
+    [self.delegate videoStream:self didChangeTorchIsNowOn:torchShouldBeOn];
+  }
   return success && torchSuccess;
 }
 
@@ -850,7 +877,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
       }
 
       // Auto-torch
-      if (!self.currentlyAdjustingFocus && !didAutoFocus && !self.currentlyAdjustingExposure && [self canSetTorchLevel]) {
+      if (!self.currentlyAdjustingFocus && !didAutoFocus && !self.currentlyAdjustingExposure && [self canSetTorchLevel] && self.config.automaticTorchModeEnabled) {
         NSTimeInterval now = [[NSDate date] timeIntervalSince1970];
         BOOL changeTorchState = NO;
         BOOL changeTorchStateToOFF = NO;

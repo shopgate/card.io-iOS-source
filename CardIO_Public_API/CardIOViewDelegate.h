@@ -11,6 +11,15 @@
 /// The receiver will be notified when the CardIOView completes it work.
 @protocol CardIOViewDelegate<NSObject>
 
+@optional
+
+
+/// This method will be called when CardIOView changes the torch light status
+/// @praram cardIOView The active CardIOView.
+/// @param isTorchOn The new status of the torch light.
+-(void)cardIOView:(CardIOView*)cardIOView didChangeTorchStatusIsNowOn:(BOOL)isTorchOn;
+
+
 @required
 
 /// This method will be called when the CardIOView completes its work.
@@ -20,5 +29,6 @@
 /// @param cardInfo The results of the scan.
 /// @note cardInfo will be nil if exiting due to a problem (e.g., no available camera).
 - (void)cardIOView:(CardIOView *)cardIOView didScanCard:(CardIOCreditCardInfo *)cardInfo;
+
 
 @end

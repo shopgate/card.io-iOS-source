@@ -19,6 +19,9 @@
 
 
 @protocol CardIOCameraViewDelegate <NSObject>
+@optional
+- (void)torchChangedStatusIsOn:(BOOL)isTorchOn;
+
 @required
 - (void)guidelayerDidSetCardGuideInformation:(CGRect)internalGuideFrame foundTopEdge:(BOOL)foundTop foundLeftEdge:(BOOL)foundLeft foundBottomEdge:(BOOL)foundBottom foundRightEgde:(BOOL)foundRight isRotating:(BOOL)isRotating detectedCard:(BOOL)detectedCard recommendedShowingInstructions:(BOOL)recommendedShowingInstructions;
 @end
