@@ -142,6 +142,7 @@
 
 @interface CardIOVideoStream ()
 @property(nonatomic, assign, readwrite) BOOL running;
+@property(nonatomic, assign, readwrite) BOOL cameraIsInitialized;
 @property(nonatomic, assign, readwrite) BOOL wasRunningBeforeBeingBackgrounded;
 @property(nonatomic, assign, readwrite) BOOL didEndGeneratingDeviceOrientationNotifications;
 @property(assign, readwrite) UIInterfaceOrientation interfaceOrientation; // intentionally atomic -- video frames are processed on a different thread
@@ -191,6 +192,7 @@
     _captureSession = [[AVCaptureSession alloc] init];
     _camera = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
     _previewLayer = [AVCaptureVideoPreviewLayer layerWithSession:self.captureSession];
+    _cameraIsInitialized = NO;
     dmz = dmz_context_create(); //TODO: context only if cardScanner;
 #elif SIMULATE_CAMERA
     _previewLayer = [SimulatedCameraLayer layer];
@@ -428,6 +430,9 @@
 }
 
 - (void)autofocusOnce {
+  if (!self.cameraIsInitialized) {
+    return;
+  }
   [self changeCameraConfiguration:^{
     if([self.camera isFocusModeSupported:AVCaptureFocusModeAutoFocus]) {
       [self.camera setFocusMode:AVCaptureFocusModeAutoFocus];
@@ -625,6 +630,8 @@
                    withErrorMessage:@"CardIO couldn't lock for configuration within startSession"
 #endif
      ];
+    
+    self.cameraIsInitialized = YES;
   }
 #elif SIMULATE_CAMERA
   self.simulatedCameraTimer = [NSTimer scheduledTimerWithTimeInterval:2 target:self selector:@selector(simulateNewFrame) userInfo:nil repeats:YES];
