@@ -193,7 +193,7 @@
     _camera = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
     _previewLayer = [AVCaptureVideoPreviewLayer layerWithSession:self.captureSession];
     _cameraIsInitialized = NO;
-    dmz = dmz_context_create(); //TODO: context only if cardScanner;
+    //dmz = dmz_context_create(); //can't be loaded here any more, since it depends on modes
 #elif SIMULATE_CAMERA
     _previewLayer = [SimulatedCameraLayer layer];
 #endif
@@ -543,6 +543,11 @@
 }
 
 -(void)addCardScannerToSession:(AVCaptureSession*)session{
+  @synchronized (self) {
+    if (!dmz) {
+      dmz = dmz_context_create();
+    }
+  }
   _videoOutput = [[AVCaptureVideoDataOutput alloc] init];
   if([CardIODevice shouldSetPixelFormat]) {
     NSDictionary *videoOutputSettings = [NSDictionary dictionaryWithObject:[NSNumber numberWithUnsignedInteger:kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange]
@@ -949,7 +954,10 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   self.wasRunningBeforeBeingBackgrounded = self.running;
   [self stopSession];
 #if USE_CAMERA
-  dmz_prepare_for_backgrounding(dmz);
+  if (dmz) {
+    dmz_prepare_for_backgrounding(dmz);
+  }
+  
 #endif
 }
 
